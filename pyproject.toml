@@ -18,6 +18,9 @@ dev = [
     "pytest-playwright>=0.5",
 ]
 
+[tool.setuptools.packages.find]
+include = ["backend*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]

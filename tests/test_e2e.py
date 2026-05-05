@@ -49,12 +49,16 @@ def test_e2e_formation_dashboard_common_and_edge_cases(live_app):
             page.get_by_label("Engagement").fill("0.18")
             page.get_by_label("Reflections").fill("1")
             page.get_by_role("button", name="Assess risk").click()
-            page.get_by_test_id("risk-result").wait_for()
+            page.wait_for_function(
+                "() => /high/i.test(document.querySelector('[data-testid=\"risk-result\"]').innerText)"
+            )
             assert "high" in page.get_by_test_id("risk-result").inner_text().lower()
 
             page.get_by_label("Calling").fill("evangelism")
             page.get_by_role("button", name="Recommend path").click()
-            page.get_by_test_id("curriculum-result").wait_for()
+            page.wait_for_function(
+                "() => document.querySelector('[data-testid=\"curriculum-result\"]').innerText.includes('mission_theology')"
+            )
             assert "mission_theology" in page.get_by_test_id("curriculum-result").inner_text()
 
             page.get_by_label("Groups").fill("alpha: Ana, Bo\nbeta: Cy, Dee, Eli")
