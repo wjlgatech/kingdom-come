@@ -28,5 +28,20 @@ def test_curriculum_endpoint_recommends_content():
     assert response.json() == {"recommendations": ["mission_theology", "field_practice", "general_theology"]}
 
 
+def test_outcomes_endpoint_records_effectiveness_snapshot():
+    response = client.post(
+        "/outcomes",
+        json={"student_id": "stu-7", "impact_score": 0.86, "description": "Led a supervised neighborhood cohort."},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "student_id": "stu-7",
+        "impact_score": 0.86,
+        "description": "Led a supervised neighborhood cohort.",
+        "effectiveness": "strong",
+    }
+
+
 def test_outcome_model_is_importable_and_named():
     assert MinistryOutcome.__tablename__ == "ministry_outcomes"

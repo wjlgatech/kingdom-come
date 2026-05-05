@@ -1,0 +1,25 @@
+# Architecture
+
+Kingdom Come is intentionally small and contributor-friendly.
+
+## Runtime
+
+- `backend/app.py` owns the FastAPI app, request schemas, routes, and static UI serving.
+- `backend/services/` contains pure domain functions that are easy to test.
+- `backend/models/` contains SQLAlchemy models.
+- `backend/db/connection.py` defines the SQLAlchemy base, engine, session factory, and metadata initialization helper.
+- `frontend/` contains static HTML, CSS, and JavaScript served by FastAPI.
+
+## Testing
+
+- `tests/test_services.py` covers domain behavior and edge cases.
+- `tests/test_app.py` covers API contracts.
+- `tests/test_ui.py` verifies static UI serving.
+- `tests/test_e2e.py` launches Uvicorn and drives Chromium through common and edge-case workflows.
+
+## Design Principles
+
+- API-first: the UI should call the same endpoints external systems use.
+- Explainable defaults: service outputs include reasons or effectiveness labels.
+- Contributor simplicity: no frontend build chain until the project truly needs one.
+- Testable units: business behavior belongs in small service functions.

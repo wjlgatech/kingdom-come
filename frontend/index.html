@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kingdom Come | Predictive formation intelligence</title>
+    <meta
+      name="description"
+      content="Open-source predictive formation intelligence for seminaries, cohorts, and ministry training teams."
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Kingdom Come home">
+        <span class="brand-mark">KC</span>
+        <span>Kingdom Come</span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="#workbench">Workbench</a>
+        <a href="#api">API</a>
+        <a href="#contribute">Contribute</a>
+      </nav>
+      <a class="github-link" href="https://github.com/wjlgatech/kingdom-come">GitHub</a>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <h1>Kingdom Come</h1>
+          <p class="lede">
+            Predictive formation intelligence for teams shaping resilient ministry leaders.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#workbench">Try the workbench</a>
+            <a class="button secondary" href="/docs">Explore the API</a>
+          </div>
+          <dl class="proof-grid" aria-label="Project proof points">
+            <div>
+              <dt>10</dt>
+              <dd>tests</dd>
+            </div>
+            <div>
+              <dt>4</dt>
+              <dd>formation engines</dd>
+            </div>
+            <div>
+              <dt>100%</dt>
+              <dd>open source</dd>
+            </div>
+          </dl>
+        </div>
+
+        <aside class="dashboard-preview" aria-label="Formation intelligence preview">
+          <div class="preview-header">
+            <span>Formation cockpit</span>
+            <strong>Live API</strong>
+          </div>
+          <div class="metric-row">
+            <article>
+              <span>Risk</span>
+              <strong>High</strong>
+              <small>low engagement</small>
+            </article>
+            <article>
+              <span>Path</span>
+              <strong>Mission</strong>
+              <small>field practice</small>
+            </article>
+            <article>
+              <span>Class</span>
+              <strong>Merge</strong>
+              <small>alpha group</small>
+            </article>
+          </div>
+          <div class="signal-chart" aria-hidden="true">
+            <span style="height: 42%"></span>
+            <span style="height: 64%"></span>
+            <span style="height: 34%"></span>
+            <span style="height: 78%"></span>
+            <span style="height: 52%"></span>
+            <span style="height: 88%"></span>
+          </div>
+        </aside>
+      </section>
+
+      <section id="workbench" class="workbench" aria-label="Interactive formation workbench">
+        <div class="section-heading">
+          <h2>Run the core formation loop</h2>
+          <p>Exercise common cases and edge cases against the same FastAPI endpoints your integrations will call.</p>
+        </div>
+
+        <div class="tool-grid">
+          <form class="tool-panel" data-testid="dropout-form" id="dropout-form">
+            <h3>Dropout risk</h3>
+            <label for="engagement">Engagement</label>
+            <input id="engagement" name="engagement" type="number" value="0.22" step="0.01" />
+            <label for="reflection-count">Reflections</label>
+            <input id="reflection-count" name="reflection_count" type="number" value="1" min="0" step="1" />
+            <button class="button primary" type="submit">Assess risk</button>
+            <output class="result" data-testid="risk-result" id="risk-result">Awaiting signal.</output>
+          </form>
+
+          <form class="tool-panel" id="curriculum-form">
+            <h3>Adaptive curriculum</h3>
+            <label for="calling">Calling</label>
+            <input id="calling" name="calling" type="text" value="evangelism" />
+            <label for="completed-content">Completed content</label>
+            <input id="completed-content" name="completed_content" type="text" value="" placeholder="mission_theology" />
+            <button class="button primary" type="submit">Recommend path</button>
+            <output class="result" data-testid="curriculum-result" id="curriculum-result">Awaiting calling.</output>
+          </form>
+
+          <form class="tool-panel wide" id="orchestration-form">
+            <h3>Class orchestration</h3>
+            <label for="groups">Groups</label>
+            <textarea id="groups" name="groups" rows="5">alpha: Ana, Bo&#10;beta: Cy, Dee, Eli</textarea>
+            <button class="button primary" type="submit">Plan class</button>
+            <output class="result" data-testid="orchestration-result" id="orchestration-result">Awaiting groups.</output>
+          </form>
+
+          <form class="tool-panel" id="outcome-form">
+            <h3>Ministry outcomes</h3>
+            <label for="student-id">Student ID</label>
+            <input id="student-id" name="student_id" type="text" value="stu-7" />
+            <label for="impact-score">Impact score</label>
+            <input id="impact-score" name="impact_score" type="number" value="0.86" min="0" max="1" step="0.01" />
+            <label for="outcome-description">Outcome description</label>
+            <textarea id="outcome-description" name="description" rows="3">Led a supervised neighborhood cohort.</textarea>
+            <button class="button primary" type="submit">Track outcome</button>
+            <output class="result" data-testid="outcome-result" id="outcome-result">Awaiting outcome.</output>
+          </form>
+        </div>
+      </section>
+
+      <section id="api" class="split-section">
+        <div>
+          <h2>API-first by design</h2>
+          <p>
+            Every UI action calls a documented JSON endpoint. Use the browser workbench for demos,
+            then plug the same contracts into your LMS, cohort dashboard, or reporting pipeline.
+          </p>
+        </div>
+        <pre><code>POST /predictive/dropout-risk
+POST /curriculum/recommendations
+POST /orchestration/actions
+POST /outcomes
+GET  /health</code></pre>
+      </section>
+
+      <section id="contribute" class="contribute">
+        <h2>Built for contributors from day one</h2>
+        <p>
+          Bring better models, stronger pedagogy, accessibility improvements, deployment recipes,
+          and field-tested ministry outcome measures. The public repo includes tests, templates,
+          and a roadmap so useful contributions have a clear path.
+        </p>
+        <a class="button primary" href="https://github.com/wjlgatech/kingdom-come">Contribute on GitHub</a>
+      </section>
+    </main>
+
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>
