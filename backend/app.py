@@ -25,9 +25,12 @@ templates = Jinja2Templates(directory=FRONTEND_DIR)
 SEMINARIAN_SUBNAV = [
     {"href": "/me", "label": "Today", "key": "today"},
     {"href": "/me/chat", "label": "Mentor", "key": "mentor"},
+    {"href": "/me/timeline", "label": "Arc", "key": "arc"},
 ]
 DIRECTOR_SUBNAV = [
+    {"href": "/cohort", "label": "Cohort", "key": "cohort"},
     {"href": "/cohort/triage", "label": "Triage", "key": "triage"},
+    {"href": "/cohort/groups", "label": "Groups", "key": "groups"},
 ]
 
 
@@ -80,12 +83,39 @@ def chat_page(request: Request):
     )
 
 
+@app.get("/me/timeline", include_in_schema=False)
+def timeline_page(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "timeline.html",
+        {"subnav": _seminarian_subnav("arc"), "required_role": "seminarian"},
+    )
+
+
+@app.get("/cohort", include_in_schema=False)
+def cohort_overview_page(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "cohort_overview.html",
+        {"subnav": _director_subnav("cohort"), "required_role": "director"},
+    )
+
+
 @app.get("/cohort/triage", include_in_schema=False)
 def triage_page(request: Request):
     return templates.TemplateResponse(
         request,
         "cohort_triage.html",
         {"subnav": _director_subnav("triage"), "required_role": "director"},
+    )
+
+
+@app.get("/cohort/groups", include_in_schema=False)
+def cohort_groups_page(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "cohort_groups.html",
+        {"subnav": _director_subnav("groups"), "required_role": "director"},
     )
 
 

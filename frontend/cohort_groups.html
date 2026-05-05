@@ -1,0 +1,51 @@
+{% extends "_base.html" %}
+{% block title %}Groups — Kingdom Come{% endblock %}
+{% block stylesheet %}<link rel="stylesheet" href="/static/cohort_groups.css" />{% endblock %}
+{% block main_class %}groups-main{% endblock %}
+{% block main %}
+<script>document.body.dataset.role = "director";</script>
+
+<header class="groups-header">
+  <div>
+    <h1 class="groups-headline" data-testid="groups-headline">Plan next week's <em>small groups</em>.</h1>
+    <p class="groups-sub">Drag students into groups. Auto-distribute or get suggestions if you're stuck.</p>
+  </div>
+  <div class="groups-actions">
+    <button type="button" class="btn btn-secondary" data-testid="groups-distribute">Auto-distribute</button>
+    <button type="button" class="btn btn-secondary" data-testid="groups-suggest">Get suggestions</button>
+    <button type="button" class="btn btn-primary" data-testid="groups-confirm">Confirm plan</button>
+  </div>
+</header>
+
+<div class="groups-suggestions" data-testid="groups-suggestions" hidden>
+  <!-- orchestration suggestions injected by cohort_groups.js -->
+</div>
+
+<section class="groups-board" aria-label="Group planner">
+  <div class="groups-roster" data-testid="groups-roster" aria-label="Unassigned students">
+    <div class="groups-column-header">Roster <span class="groups-count" data-testid="roster-count">0</span></div>
+    <div class="groups-drop-target" data-testid="roster-drop" data-group-id="__roster__"></div>
+  </div>
+
+  <div class="groups-grid" data-testid="groups-grid">
+    <div class="groups-column" data-group-id="alpha" data-testid="group-alpha">
+      <div class="groups-column-header">alpha <span class="groups-count" data-testid="alpha-count">0</span></div>
+      <div class="groups-drop-target" data-testid="alpha-drop" data-group-id="alpha"></div>
+    </div>
+    <div class="groups-column" data-group-id="beta" data-testid="group-beta">
+      <div class="groups-column-header">beta <span class="groups-count" data-testid="beta-count">0</span></div>
+      <div class="groups-drop-target" data-testid="beta-drop" data-group-id="beta"></div>
+    </div>
+    <div class="groups-column" data-group-id="gamma" data-testid="group-gamma">
+      <div class="groups-column-header">gamma <span class="groups-count" data-testid="gamma-count">0</span></div>
+      <div class="groups-drop-target" data-testid="gamma-drop" data-group-id="gamma"></div>
+    </div>
+  </div>
+</section>
+
+<div class="groups-toast" data-testid="groups-toast" hidden></div>
+{% endblock %}
+
+{% block script %}
+<script type="module" src="/static/cohort_groups.js"></script>
+{% endblock %}

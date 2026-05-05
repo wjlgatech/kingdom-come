@@ -1,0 +1,19 @@
+{% extends "_base.html" %}
+{% block title %}Arc — Kingdom Come{% endblock %}
+{% block stylesheet %}<link rel="stylesheet" href="/static/timeline.css" />{% endblock %}
+{% block main_class %}timeline-main reading{% endblock %}
+{% block main %}
+<script>document.body.dataset.role = "seminarian";</script>
+<header class="timeline-header">
+  <h1 class="timeline-headline" data-testid="timeline-headline">Your formation <em>arc</em>.</h1>
+  <p class="timeline-sub" data-testid="timeline-sub">Eight weeks. The reflections you wrote, the steps you took, the way the season has shaped you.</p>
+</header>
+
+<section class="timeline-list" data-testid="timeline-list" aria-busy="true">
+  <!-- weekly cards injected by timeline.js -->
+</section>
+{% endblock %}
+
+{% block script %}
+<script type="module" src="/static/timeline.js"></script>
+{% endblock %}

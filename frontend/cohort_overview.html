@@ -1,0 +1,35 @@
+{% extends "_base.html" %}
+{% block title %}Cohort — Kingdom Come{% endblock %}
+{% block stylesheet %}<link rel="stylesheet" href="/static/cohort_overview.css" />{% endblock %}
+{% block main_class %}cohort-main{% endblock %}
+{% block main %}
+<script>document.body.dataset.role = "director";</script>
+
+<section class="cohort-header">
+  <h1 class="cohort-headline" data-testid="cohort-headline">St. Aloysius cohort, <em>Spring 2026</em></h1>
+  <p class="cohort-paragraph" data-testid="cohort-paragraph">
+    <span class="skeleton" style="display: inline-block; width: 80%; height: 1.5em; vertical-align: middle;"></span>
+  </p>
+</section>
+
+<section class="cohort-chart-section" aria-labelledby="chart-h">
+  <h2 class="cohort-section-label" id="chart-h">Median engagement, last 8 weeks</h2>
+  <figure class="cohort-chart" data-testid="cohort-chart">
+    <!-- SVG chart injected by cohort_overview.js -->
+  </figure>
+</section>
+
+<section class="cohort-snippet-section" aria-labelledby="snippet-h">
+  <div class="cohort-snippet-header">
+    <h2 class="cohort-section-label" id="snippet-h">Who needs you this week</h2>
+    <a href="/cohort/triage" class="btn btn-ghost inline" data-testid="cohort-go-to-triage">Open triage →</a>
+  </div>
+  <div class="cohort-snippet-list" data-testid="cohort-snippet-list" aria-busy="true">
+    <!-- top 3 flagged students injected by cohort_overview.js -->
+  </div>
+</section>
+{% endblock %}
+
+{% block script %}
+<script type="module" src="/static/cohort_overview.js"></script>
+{% endblock %}

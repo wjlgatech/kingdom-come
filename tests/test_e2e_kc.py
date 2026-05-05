@@ -262,6 +262,99 @@ def test_e2e_profile_modal_esc_closes_and_returns_focus(live_app):
         pytest.fail(f"Playwright modal-escape failed: {exc}")
 
 
+def test_e2e_timeline_renders_weekly_arc(live_app):
+    """P2: Marcus's formation arc shows weekly cards with reflections + status."""
+    try:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch()
+            page = browser.new_page(viewport={"width": 1440, "height": 900})
+            _seed_role(page, "seminarian", live_app)
+            page.goto(f"{live_app}/me/timeline", wait_until="networkidle")
+
+            page.wait_for_function(
+                "() => document.querySelectorAll('[data-testid=\"timeline-week\"]').length >= 3"
+            )
+            # The most recent week (first card) gets a reflection from PROFILE_FIXTURES.
+            page.wait_for_function(
+                "() => document.querySelector('[data-testid=\"timeline-reflection\"]') !== null"
+            )
+            # Subnav has Arc active.
+            arc_active = page.locator("a[aria-current='page']").first.inner_text().strip()
+            assert arc_active == "Arc"
+            browser.close()
+    except Error as exc:
+        pytest.fail(f"Playwright timeline flow failed: {exc}")
+
+
+def test_e2e_cohort_overview_renders_chart_and_snippet(live_app):
+    """P2: Director's cohort overview shows chart + flagged-students snippet."""
+    try:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch()
+            page = browser.new_page(viewport={"width": 1440, "height": 900})
+            _seed_role(page, "director", live_app)
+            page.goto(f"{live_app}/cohort", wait_until="networkidle")
+
+            # Chart SVG renders synchronously; snippet rows wait for fetch.
+            page.wait_for_function(
+                "() => document.querySelector('[data-testid=\"cohort-chart-svg\"]') !== null"
+            )
+            page.wait_for_function(
+                "() => document.querySelectorAll('[data-testid=\"cohort-snippet-row\"]').length >= 1"
+            )
+            # Paragraph is no longer a skeleton placeholder.
+            page.wait_for_function(
+                "() => /students/.test(document.querySelector('[data-testid=\"cohort-paragraph\"]')?.innerText ?? '')"
+            )
+            # "Open triage →" link goes to /cohort/triage.
+            page.get_by_test_id("cohort-go-to-triage").click()
+            page.wait_for_url(f"{live_app}/cohort/triage")
+            browser.close()
+    except Error as exc:
+        pytest.fail(f"Playwright cohort overview flow failed: {exc}")
+
+
+def test_e2e_groups_drag_distribute_and_suggest(live_app):
+    """P2: Director can auto-distribute, request orchestration suggestions,
+    and confirm the plan."""
+    try:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch()
+            page = browser.new_page(viewport={"width": 1440, "height": 900})
+            _seed_role(page, "director", live_app)
+            page.goto(f"{live_app}/cohort/groups", wait_until="networkidle")
+
+            # Roster starts populated, groups empty.
+            page.wait_for_function(
+                "() => Number(document.querySelector('[data-testid=\"roster-count\"]')?.textContent ?? 0) > 0"
+            )
+            assert page.get_by_test_id("alpha-count").inner_text().strip() == "0"
+
+            # Auto-distribute fills all 3 groups, empties roster.
+            page.get_by_test_id("groups-distribute").click()
+            page.wait_for_function(
+                "() => Number(document.querySelector('[data-testid=\"roster-count\"]')?.textContent ?? 0) === 0"
+            )
+            for g in ("alpha", "beta", "gamma"):
+                count = int(page.get_by_test_id(f"{g}-count").inner_text().strip())
+                assert count > 0, f"{g} should have at least one student after auto-distribute"
+
+            # Get suggestions — orchestration returns either suggestions or 'No changes'.
+            page.get_by_test_id("groups-suggest").click()
+            page.wait_for_function(
+                "() => !document.querySelector('[data-testid=\"groups-suggestions\"]')?.hidden"
+            )
+
+            # Confirm plan — toast shows.
+            page.get_by_test_id("groups-confirm").click()
+            page.wait_for_function(
+                "() => /Plan confirmed/.test(document.querySelector('[data-testid=\"groups-toast\"]')?.textContent ?? '')"
+            )
+            browser.close()
+    except Error as exc:
+        pytest.fail(f"Playwright groups flow failed: {exc}")
+
+
 def test_e2e_invalid_student_id_renders_not_found(live_app):
     try:
         with sync_playwright() as playwright:

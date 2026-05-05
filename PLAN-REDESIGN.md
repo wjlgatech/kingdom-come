@@ -202,7 +202,7 @@ All motion honors `prefers-reduced-motion: reduce` (instant transitions).
 ## Implementation phases
 
 - **P1 (SHIPPED 2026-05-05):** `/`, `/me`, `/me/chat`, `/cohort/triage`, `/students/:id`, plus `/admin/workbench` preserved. Status helper, Jinja2 templates, all P1 components, 16 new tests, full E2E coverage. 55/55 tests passing across 3 consecutive runs.
-- **P2:** `/me/timeline`, `/cohort`, `/cohort/groups`.
+- **P2 (SHIPPED 2026-05-05):** `/me/timeline` (REC-6 longitudinal arc), `/cohort` (REC-7 altitude-1 overview with median engagement chart), `/cohort/groups` (REC-4 drag-drop planner with orchestration suggestions). Subnav extended for both roles. 8 new tests (3 routes + 3 E2E + 2 subnav). 63/63 tests passing across 2 consecutive runs.
 - **P3:** time-bounded shared challenges (REC-8).
 
 ## Backend changes required
