@@ -19,8 +19,11 @@ async def websocket_chat(websocket: WebSocket) -> None:
                 await websocket.send_json({"error": "student_id and message are required"})
                 continue
             try:
-                async for chunk in handle_chat_ws(student_id, message):
-                    await websocket.send_json({"chunk": chunk})
+                async for item in handle_chat_ws(student_id, message):
+                    if isinstance(item, dict):
+                        await websocket.send_json(item)
+                    else:
+                        await websocket.send_json({"chunk": item})
                 await websocket.send_json({"done": True})
             except Exception as exc:
                 await websocket.send_json({"error": f"pipeline error: {exc}"})

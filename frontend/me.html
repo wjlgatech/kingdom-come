@@ -1,0 +1,44 @@
+{% extends "_base.html" %}
+{% block title %}Today — Kingdom Come{% endblock %}
+{% block stylesheet %}<link rel="stylesheet" href="/static/me.css" />{% endblock %}
+{% block main_class %}me-main{% endblock %}
+{% block main %}
+<script>document.body.dataset.role = "seminarian";</script>
+<section class="me-greeting">
+  <h1 class="me-headline">Good morning, <em data-testid="me-name">Marcus</em>.</h1>
+  <div class="me-date" data-testid="me-date"></div>
+</section>
+
+<section class="me-cards">
+  <article class="me-card" aria-labelledby="card-prompt-h">
+    <h2 class="me-card-label" id="card-prompt-h">Today's reflection prompt</h2>
+    <p class="me-card-lead" data-testid="me-prompt">
+      Where in your week did you sense a calling toward people, and where toward solitude?
+      Sit with both before you answer.
+    </p>
+    <a href="/me/chat" class="btn btn-primary" data-testid="me-begin-reflection">Begin reflection</a>
+  </article>
+
+  <article class="me-card" aria-labelledby="card-status-h">
+    <h2 class="me-card-label" id="card-status-h">Your formation status</h2>
+    <p class="me-card-lead" data-testid="me-status-line">
+      <span class="skeleton" style="display: inline-block; width: 200px; height: 1.4em; vertical-align: middle;"></span>
+    </p>
+    <button type="button" class="btn btn-ghost inline" data-testid="me-view-arc" disabled title="Coming soon">View full arc →</button>
+  </article>
+
+  <article class="me-card" aria-labelledby="card-path-h">
+    <h2 class="me-card-label" id="card-path-h">Next in your path</h2>
+    <p class="me-card-lead" data-testid="me-path-line">
+      <span class="skeleton" style="display: inline-block; width: 240px; height: 1.4em; vertical-align: middle;"></span>
+    </p>
+    <div style="display: flex; gap: var(--space-12); flex-wrap: wrap;">
+      <a href="/me/chat" class="btn btn-ghost" data-testid="me-talk-mentor">Talk to mentor about it</a>
+    </div>
+  </article>
+</section>
+{% endblock %}
+
+{% block script %}
+<script type="module" src="/static/me.js"></script>
+{% endblock %}

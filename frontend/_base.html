@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Kingdom Come{% endblock %}</title>
+    <meta name="description" content="{% block description %}Predictive formation intelligence for seminaries.{% endblock %}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Geist:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/tokens.css" />
+    <link rel="stylesheet" href="/static/components.css" />
+    {% block stylesheet %}{% endblock %}
+  </head>
+  <body class="paper">
+    {% block chrome %}
+    <header class="kc-header">
+      <a class="kc-brand" href="/">KC <span style="font-family: var(--sans); font-size: var(--text-xs); color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.1em; margin-left: var(--space-8);">Kingdom Come</span></a>
+      <div class="kc-identity" data-testid="kc-identity">
+        <span class="kc-identity-name" data-testid="kc-identity-name"></span>
+        <a href="#" class="kc-switch" data-testid="kc-switch-role">Switch role</a>
+      </div>
+    </header>
+    {% if subnav %}
+    <nav class="kc-subnav" aria-label="Persona navigation">
+      {% for item in subnav %}
+        <a href="{{ item.href }}"{% if item.active %} aria-current="page"{% endif %}>{{ item.label }}</a>
+      {% endfor %}
+    </nav>
+    {% endif %}
+    {% endblock %}
+
+    <main class="kc-main {% block main_class %}{% endblock %}">
+      {% block main %}{% endblock %}
+    </main>
+
+    <script type="module">
+      // Universal chrome behavior: identity chip + switch role + role gate.
+      import { DEMO_SEMINARIAN_ID, DEMO_DIRECTOR } from "/static/cohort_data.js";
+
+      function safeLocalStorage() {
+        try { return window.localStorage; } catch { return null; }
+      }
+
+      const ls = safeLocalStorage();
+      const role = ls?.getItem("kc-role");
+      const studentId = ls?.getItem("kc-student-id");
+      const requiredRole = document.body.dataset.role;
+      const identityName = document.querySelector("[data-testid='kc-identity-name']");
+      const switchLink = document.querySelector("[data-testid='kc-switch-role']");
+
+      if (identityName) {
+        if (role === "seminarian") identityName.textContent = "Marcus Reilly · Seminarian";
+        else if (role === "director") identityName.textContent = `${DEMO_DIRECTOR.name} · Director`;
+        else identityName.textContent = "";
+      }
+
+      if (switchLink) {
+        switchLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          if (ls) {
+            ls.removeItem("kc-role");
+            ls.removeItem("kc-student-id");
+          }
+          window.location.href = "/";
+        });
+      }
+
+      // Role gate: if a page requires a specific role and the user doesn't have it,
+      // banner offers a return to /.
+      if (requiredRole && role && role !== requiredRole) {
+        const banner = document.createElement("div");
+        banner.className = "kc-error";
+        banner.style.maxWidth = "var(--dashboard-width)";
+        banner.style.margin = "var(--space-16) auto";
+        banner.innerHTML = `This page is for ${requiredRole}s. <a href="/" style="color: inherit; text-decoration: underline;">Pick a role</a>.`;
+        document.body.insertBefore(banner, document.querySelector(".kc-main"));
+      }
+      if (requiredRole && !role) {
+        // No role at all (private browsing or first visit) — show banner.
+        const banner = document.createElement("div");
+        banner.className = "kc-error";
+        banner.style.maxWidth = "var(--dashboard-width)";
+        banner.style.margin = "var(--space-16) auto";
+        banner.dataset.testid = "role-gate-banner";
+        banner.innerHTML = `Pick a role to begin. <a href="/" style="color: inherit; text-decoration: underline;">Go to landing</a>.`;
+        document.body.insertBefore(banner, document.querySelector(".kc-main"));
+      }
+    </script>
+    {% block script %}{% endblock %}
+  </body>
+</html>

@@ -1,0 +1,35 @@
+{% extends "_base.html" %}
+{% block title %}Mentor — Kingdom Come{% endblock %}
+{% block stylesheet %}<link rel="stylesheet" href="/static/chat.css" />{% endblock %}
+{% block main_class %}chat-main{% endblock %}
+{% block main %}
+<script>document.body.dataset.role = "seminarian";</script>
+<section class="chat-header">
+  <h1 class="chat-headline">Talk it through.</h1>
+  <span class="chat-status" data-testid="chat-conn-status">disconnected</span>
+</section>
+
+<div class="chat-thread" data-testid="chat-thread" aria-live="polite" aria-busy="false">
+  <div class="bubble mentor" data-testid="chat-greeting">
+    Hello, Marcus. What's on your heart today?
+  </div>
+</div>
+
+<div class="memory-pills" data-testid="memory-pills" hidden>
+  <span class="label">Mentor remembers</span>
+</div>
+
+<form class="chat-form" id="chat-form" data-testid="chat-form">
+  <label for="chat-message" class="visually-hidden">Your message</label>
+  <textarea id="chat-message" name="message" rows="2" placeholder="Type a reflection or a question…" data-testid="chat-message-input" required></textarea>
+  <div class="chat-form-row">
+    <a href="#" class="btn btn-ghost inline" data-testid="chat-manage-memory" title="Coming soon" aria-disabled="true">Manage memory</a>
+    <button type="submit" class="btn btn-primary" data-testid="chat-send">Send</button>
+  </div>
+  <small class="chat-hint">Cmd/Ctrl + Enter to send.</small>
+</form>
+{% endblock %}
+
+{% block script %}
+<script type="module" src="/static/chat.js"></script>
+{% endblock %}

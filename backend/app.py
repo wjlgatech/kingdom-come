@@ -1,8 +1,9 @@
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
 from backend.api.ws_chat import router as ws_chat_router
@@ -17,6 +18,25 @@ FRONTEND_DIR = PROJECT_ROOT / "frontend"
 
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 app.include_router(ws_chat_router)
+
+templates = Jinja2Templates(directory=FRONTEND_DIR)
+
+
+SEMINARIAN_SUBNAV = [
+    {"href": "/me", "label": "Today", "key": "today"},
+    {"href": "/me/chat", "label": "Mentor", "key": "mentor"},
+]
+DIRECTOR_SUBNAV = [
+    {"href": "/cohort/triage", "label": "Triage", "key": "triage"},
+]
+
+
+def _seminarian_subnav(active_key: str) -> list[dict]:
+    return [{**item, "active": item["key"] == active_key} for item in SEMINARIAN_SUBNAV]
+
+
+def _director_subnav(active_key: str) -> list[dict]:
+    return [{**item, "active": item["key"] == active_key} for item in DIRECTOR_SUBNAV]
 
 
 class StudentSignalRequest(BaseModel):
@@ -38,7 +58,52 @@ class MinistryOutcomeRequest(BaseModel):
 
 
 @app.get("/", include_in_schema=False)
-def landing_page() -> FileResponse:
+def landing_page(request: Request):
+    return templates.TemplateResponse(request, "door.html", {"subnav": None})
+
+
+@app.get("/me", include_in_schema=False)
+def me_page(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "me.html",
+        {"subnav": _seminarian_subnav("today"), "required_role": "seminarian"},
+    )
+
+
+@app.get("/me/chat", include_in_schema=False)
+def chat_page(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "chat.html",
+        {"subnav": _seminarian_subnav("mentor"), "required_role": "seminarian"},
+    )
+
+
+@app.get("/cohort/triage", include_in_schema=False)
+def triage_page(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "cohort_triage.html",
+        {"subnav": _director_subnav("triage"), "required_role": "director"},
+    )
+
+
+@app.get("/students/{student_id}", include_in_schema=False)
+def profile_page(request: Request, student_id: str):
+    return templates.TemplateResponse(
+        request,
+        "student_profile.html",
+        {
+            "subnav": _director_subnav("triage"),
+            "required_role": "director",
+            "student_id": student_id,
+        },
+    )
+
+
+@app.get("/admin/workbench", include_in_schema=False)
+def workbench_page() -> FileResponse:
     return FileResponse(FRONTEND_DIR / "index.html")
 
 

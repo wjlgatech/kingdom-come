@@ -1,0 +1,39 @@
+{% extends "_base.html" %}
+{% block title %}Student profile — Kingdom Come{% endblock %}
+{% block stylesheet %}<link rel="stylesheet" href="/static/profile.css" />{% endblock %}
+{% block main_class %}profile-main{% endblock %}
+{% block main %}
+<script>document.body.dataset.role = "director";</script>
+<nav class="profile-breadcrumb" aria-label="breadcrumb">
+  <a href="/cohort/triage">Cohort</a> <span>›</span>
+  <a href="/cohort/triage">Triage</a> <span>›</span>
+  <span data-testid="profile-breadcrumb-name">…</span>
+</nav>
+
+<section class="profile-header" data-testid="profile-header">
+  <div class="profile-header-row">
+    <span class="avatar" data-testid="profile-avatar"></span>
+    <div>
+      <h1 class="profile-name" data-testid="profile-name">Loading…</h1>
+      <div class="profile-meta" data-testid="profile-meta"></div>
+    </div>
+    <span data-testid="profile-status-pill"></span>
+  </div>
+  <button type="button" class="btn btn-primary" data-testid="profile-log-outcome">+ Log outcome</button>
+</section>
+
+<div class="profile-tabs" role="tablist" aria-label="Student profile tabs">
+  <button type="button" role="tab" aria-selected="true" aria-controls="panel-reflections" id="tab-reflections" class="profile-tab" data-testid="tab-reflections" data-tab="reflections">Reflections</button>
+  <button type="button" role="tab" aria-selected="false" aria-controls="panel-outcomes" id="tab-outcomes" tabindex="-1" class="profile-tab" data-testid="tab-outcomes" data-tab="outcomes">Outcomes</button>
+  <button type="button" role="tab" aria-selected="false" aria-controls="panel-history" id="tab-history" tabindex="-1" class="profile-tab" data-testid="tab-history" data-tab="history">Risk history</button>
+</div>
+
+<div role="tabpanel" id="panel-reflections" aria-labelledby="tab-reflections" class="profile-panel" data-testid="panel-reflections"></div>
+<div role="tabpanel" id="panel-outcomes" aria-labelledby="tab-outcomes" class="profile-panel" data-testid="panel-outcomes" hidden></div>
+<div role="tabpanel" id="panel-history" aria-labelledby="tab-history" class="profile-panel" data-testid="panel-history" hidden></div>
+{% endblock %}
+
+{% block script %}
+<script type="module" src="/static/profile.js"></script>
+<script>window.STUDENT_ID = "{{ student_id }}";</script>
+{% endblock %}

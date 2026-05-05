@@ -7,3 +7,5 @@ formation.db
 *.sqlite3
 .env
 output/
+.gstack/
+design-preview.html

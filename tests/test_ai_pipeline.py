@@ -21,7 +21,13 @@ def run(coro):
 
 
 async def _collect(student_id, message):
-    return [chunk async for chunk in ai_pipeline.handle_chat_ws(student_id, message)]
+    """Collect chunks (strings only); the memory dict envelope is filtered out."""
+    return [item async for item in ai_pipeline.handle_chat_ws(student_id, message) if isinstance(item, str)]
+
+
+async def _collect_all(student_id, message):
+    """Collect all yielded items including the memory dict — for protocol assertions."""
+    return [item async for item in ai_pipeline.handle_chat_ws(student_id, message)]
 
 
 def test_pipeline_streams_chunks_from_llm(monkeypatch):
@@ -95,3 +101,24 @@ def test_pipeline_publishes_activity_event(monkeypatch):
     assert msg is not None
     assert b"stu-5" in msg["data"]
     pubsub.close()
+
+
+def test_pipeline_yields_memory_envelope_first(monkeypatch):
+    """Pipeline must yield {memory: [...]} dict before any string chunks."""
+    async def fake_stream(prompt):
+        yield "ack"
+
+    monkeypatch.setattr(ai_pipeline, "stream_llm_response", fake_stream)
+
+    # First call: memory is empty for a new student.
+    items = run(_collect_all("stu-mem", "first ever message"))
+    assert isinstance(items[0], dict)
+    assert "memory" in items[0]
+    assert items[0]["memory"] == []
+    assert all(isinstance(x, str) for x in items[1:])
+
+    # Second call: memory should now have the prior turn(s).
+    items2 = run(_collect_all("stu-mem", "follow up"))
+    assert isinstance(items2[0], dict)
+    assert "memory" in items2[0]
+    assert len(items2[0]["memory"]) > 0

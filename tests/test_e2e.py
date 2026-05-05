@@ -51,7 +51,7 @@ def test_e2e_formation_dashboard_common_and_edge_cases(live_app):
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": 1440, "height": 1000})
-            page.goto(live_app, wait_until="networkidle")
+            page.goto(f"{live_app}/admin/workbench", wait_until="networkidle")
 
             assert page.get_by_role("heading", name="Kingdom Come").is_visible()
             page.get_by_label("Engagement").fill("0.18")
@@ -105,7 +105,7 @@ def test_e2e_chat_flow_for_student_and_professor(live_app):
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": 1440, "height": 1000})
-            page.goto(live_app, wait_until="networkidle")
+            page.goto(f"{live_app}/admin/workbench", wait_until="networkidle")
 
             # Student perspective: send a message and see a streaming reply.
             chat_student = page.locator("#chat-student-id")

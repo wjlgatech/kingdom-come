@@ -1,0 +1,72 @@
+{% extends "_base.html" %}
+{% block title %}Kingdom Come — Pick a role{% endblock %}
+{% block stylesheet %}<link rel="stylesheet" href="/static/door.css" />{% endblock %}
+{% block chrome %}
+<header class="kc-header">
+  <a class="kc-brand" href="/">KC <span style="font-family: var(--sans); font-size: var(--text-xs); color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.1em; margin-left: var(--space-8);">Kingdom Come</span></a>
+</header>
+{% endblock %}
+{% block main_class %}door-main{% endblock %}
+{% block main %}
+<section class="door-hero">
+  <h1 class="door-headline">Predictive intelligence for <em>formation</em>, not for performance.</h1>
+  <p class="door-sub">Two doors. One for the seminarian discerning a calling. One for the director shaping a cohort.</p>
+</section>
+
+<section class="door-grid" aria-label="Pick your role">
+  <a href="/me" class="door-card" data-testid="role-card-seminarian" data-role="seminarian">
+    <div class="door-card-label">For the seminarian</div>
+    <div class="door-card-title">I'm in formation.</div>
+    <div class="door-card-preview">
+      Today's reflection prompt. <span class="status-pill status-steady" aria-label="example status">Steady</span> · Your next step in mission theology.
+    </div>
+    <div class="door-card-arrow" aria-hidden="true">→</div>
+  </a>
+
+  <a href="/cohort/triage" class="door-card" data-testid="role-card-director" data-role="director">
+    <div class="door-card-label">For the formation director</div>
+    <div class="door-card-title">I'm shaping a cohort.</div>
+    <div class="door-card-preview">
+      3 students need a check-in this week. Plain-English reasons. One click to schedule.
+    </div>
+    <div class="door-card-arrow" aria-hidden="true">→</div>
+  </a>
+</section>
+
+<footer class="door-footer">
+  <a href="/admin/workbench" data-testid="engineer-workbench-link">Engineer workbench</a>
+</footer>
+{% endblock %}
+
+{% block script %}
+<script type="module">
+  import { DEMO_SEMINARIAN_ID, DEMO_DIRECTOR } from "/static/cohort_data.js";
+
+  function safeLs() { try { return window.localStorage; } catch { return null; } }
+
+  const ls = safeLs();
+  const existingRole = ls?.getItem("kc-role");
+
+  // Skip-on-revisit: if already have a role, redirect.
+  if (existingRole === "seminarian") {
+    window.location.replace("/me");
+  } else if (existingRole === "director") {
+    window.location.replace("/cohort/triage");
+  }
+
+  // Door click: store role + identity, then navigate.
+  document.querySelectorAll("[data-role]").forEach((card) => {
+    card.addEventListener("click", (e) => {
+      e.preventDefault();
+      const role = card.dataset.role;
+      try {
+        if (ls) {
+          ls.setItem("kc-role", role);
+          ls.setItem("kc-student-id", role === "seminarian" ? DEMO_SEMINARIAN_ID : DEMO_DIRECTOR.id);
+        }
+      } catch { /* private browsing — proceed without persistence */ }
+      window.location.href = card.getAttribute("href");
+    });
+  });
+</script>
+{% endblock %}

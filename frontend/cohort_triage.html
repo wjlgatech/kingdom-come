@@ -1,0 +1,21 @@
+{% extends "_base.html" %}
+{% block title %}Triage — Kingdom Come{% endblock %}
+{% block stylesheet %}<link rel="stylesheet" href="/static/triage.css" />{% endblock %}
+{% block main_class %}triage-main{% endblock %}
+{% block main %}
+<script>document.body.dataset.role = "director";</script>
+<section class="triage-header">
+  <h1 class="triage-headline" data-testid="triage-cohort-name">St. Aloysius cohort, <em>Spring 2026</em></h1>
+  <div class="triage-summary" data-testid="triage-summary">
+    <span class="skeleton" style="display: inline-block; width: 240px; height: 1.4em; vertical-align: middle;"></span>
+  </div>
+</section>
+
+<section class="triage-list" aria-label="Students needing attention" data-testid="triage-list" aria-busy="true">
+  <!-- rows injected by triage.js -->
+</section>
+{% endblock %}
+
+{% block script %}
+<script type="module" src="/static/triage.js"></script>
+{% endblock %}
