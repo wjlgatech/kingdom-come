@@ -130,6 +130,17 @@
             <button class="button primary" type="submit">Track outcome</button>
             <output class="result" data-testid="outcome-result" id="outcome-result">Awaiting outcome.</output>
           </form>
+
+          <form class="tool-panel wide" id="chat-form">
+            <h3>Live AI mentor</h3>
+            <label for="chat-student-id">Student ID</label>
+            <input id="chat-student-id" name="student_id" type="text" value="stu-1" />
+            <label for="chat-message">Message</label>
+            <textarea id="chat-message" name="message" rows="2" placeholder="Ask about your formation path…">How am I progressing in evangelism?</textarea>
+            <button class="button primary" type="submit">Send</button>
+            <output class="result" data-testid="chat-result" id="chat-result">Awaiting message.</output>
+            <small data-testid="chat-status" id="chat-status">disconnected</small>
+          </form>
         </div>
       </section>
 

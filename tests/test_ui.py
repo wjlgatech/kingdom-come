@@ -13,6 +13,7 @@ def test_landing_page_serves_public_product_ui():
     assert "Kingdom Come" in response.text
     assert "Predictive formation intelligence" in response.text
     assert "data-testid=\"dropout-form\"" in response.text
+    assert "data-testid=\"chat-result\"" in response.text
 
 
 def test_static_assets_are_served():
@@ -20,3 +21,4 @@ def test_static_assets_are_served():
 
     assert response.status_code == 200
     assert "submitDropoutRisk" in response.text
+    assert "submitChat" in response.text

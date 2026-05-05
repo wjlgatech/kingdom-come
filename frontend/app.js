@@ -99,3 +99,68 @@ document.querySelector("#dropout-form").addEventListener("submit", submitDropout
 document.querySelector("#curriculum-form").addEventListener("submit", submitCurriculum);
 document.querySelector("#orchestration-form").addEventListener("submit", submitOrchestration);
 document.querySelector("#outcome-form").addEventListener("submit", submitOutcome);
+
+let chatSocket = null;
+let chatBuffer = "";
+
+function setChatStatus(state) {
+  const status = document.querySelector("#chat-status");
+  if (status) status.textContent = state;
+}
+
+function ensureChatSocket() {
+  if (chatSocket && (chatSocket.readyState === WebSocket.OPEN || chatSocket.readyState === WebSocket.CONNECTING)) {
+    return chatSocket;
+  }
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  chatSocket = new WebSocket(`${proto}//${window.location.host}/ws/chat`);
+  setChatStatus("connecting");
+  chatSocket.addEventListener("open", () => setChatStatus("connected"));
+  chatSocket.addEventListener("close", () => setChatStatus("disconnected"));
+  chatSocket.addEventListener("error", () => setChatStatus("error"));
+  chatSocket.addEventListener("message", (event) => {
+    const output = document.querySelector("#chat-result");
+    let parsed;
+    try {
+      parsed = JSON.parse(event.data);
+    } catch {
+      chatBuffer += event.data;
+      output.textContent = chatBuffer;
+      return;
+    }
+    if (parsed.error) {
+      output.textContent = parsed.error;
+      output.classList.add("error");
+      return;
+    }
+    if (parsed.chunk !== undefined) {
+      output.classList.remove("error");
+      chatBuffer += parsed.chunk;
+      output.textContent = chatBuffer;
+    } else if (parsed.done) {
+      setChatStatus("ready");
+    }
+  });
+  return chatSocket;
+}
+
+function submitChat(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const output = document.querySelector("#chat-result");
+  output.classList.remove("error");
+  chatBuffer = "";
+  output.textContent = "";
+  const ws = ensureChatSocket();
+  const payload = JSON.stringify({
+    student_id: form.student_id.value,
+    message: form.message.value,
+  });
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(payload);
+  } else {
+    ws.addEventListener("open", () => ws.send(payload), { once: true });
+  }
+}
+
+document.querySelector("#chat-form").addEventListener("submit", submitChat);

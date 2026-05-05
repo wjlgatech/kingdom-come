@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from backend.api.ws_chat import router as ws_chat_router
 from backend.services.curriculum import recommend_content
 from backend.services.orchestration import class_orchestrator
 from backend.services.predictive import dropout_risk
@@ -15,6 +16,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
 
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+app.include_router(ws_chat_router)
 
 
 class StudentSignalRequest(BaseModel):
