@@ -4,6 +4,8 @@
 
 - Public FastAPI app with static UI.
 - Dropout risk, curriculum, orchestration, and outcome endpoints.
+- Cohort and student read endpoints under `/api/` for integrations.
+- MCP server exposing the formation engines and the AI mentor for Claude Code, Codex, OpenCode, and any MCP-aware agent harness.
 - Browser E2E coverage for the primary workbench flow.
 
 ## Next

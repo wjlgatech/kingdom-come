@@ -23,9 +23,17 @@ dev = [
     "pytest>=8",
     "pytest-playwright>=0.5",
 ]
+mcp = [
+    "httpx>=0.27",
+    "mcp>=1.0",
+    "websockets>=12",
+]
+
+[project.scripts]
+kingdom-come-mcp = "mcp_server.server:main"
 
 [tool.setuptools.packages.find]
-include = ["backend*"]
+include = ["backend*", "mcp_server*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

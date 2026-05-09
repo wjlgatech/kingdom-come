@@ -49,6 +49,14 @@ FastAPI monolith serving JSON endpoints **and** server-rendered Jinja pages for 
 1. **Redesigned per-persona surfaces** (the real product, anchored to the user stories): `/` (door), `/me`, `/me/chat`, `/me/timeline`, `/cohort`, `/cohort/triage`, `/cohort/groups`, `/students/{id}`. Each Jinja page extends `frontend/_base.html`, sets `required_role` (the base template's role gate reads this), and ships its own `*.css` + `*.js` files. Role + student id are persisted in `localStorage` (`kc-role`, `kc-student-id`) by `door.js`.
 2. **Admin workbench** at `/admin/workbench` (serves `frontend/index.html`) — the original endpoint-shaped form playground. Kept for engineers / API debugging; do not regress it but do not extend it.
 
+### Agent integration (MCP)
+
+- `mcp_server/server.py` exposes nine tools over stdio via `FastMCP` (`mcp` SDK 1.x): `dropout_risk`, `curriculum_recommend`, `orchestration_plan`, `log_outcome`, `list_students`, `get_student`, `get_cohort`, `list_cohort_outcomes`, `chat_with_mentor`. Tools are thin `httpx` wrappers over the FastAPI; `chat_with_mentor` opens the WS, drains `memory + chunks + done`, and returns the whole reply (no streaming through MCP).
+- Configure via env: `KC_BASE_URL` (default `http://127.0.0.1:8000`), `KC_WS_URL` (derived if unset), `KC_TIMEOUT_S` (default 30). For offline agent demos use the same `EMBEDDING_FAKE=1` + `LLM_FAKE_RESPONSE=...` env vars the E2E tests use.
+- Agent-facing read endpoints live under **`/api/...`** (e.g. `/api/students/{id}`) so they don't collide with the Jinja page route at `/students/{id}`. When adding new agent reads, keep the namespace.
+- Cohort/student data comes from `backend/fixtures/cohort.py`, ported from `frontend/cohort_data.js`. The two are duplicated source-of-truth until the frontend migrates to fetch `/api/students` — keep them in sync until then.
+- `.claude-plugin/plugin.json` registers the MCP server with Claude Code; `docs/AGENTS.md` has the wiring snippets for Claude Code, Codex, and other MCP-aware harnesses.
+
 ### Frontend conventions
 
 - All interactive elements addressable from tests via `data-testid` (see `tests/test_routes.py::test_per_page_assets_are_referenced` for the canonical list of per-page asset pairs).
