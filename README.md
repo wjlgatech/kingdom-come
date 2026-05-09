@@ -6,6 +6,17 @@ Kingdom Come is an open-source FastAPI platform for seminaries, church networks,
 
 [Explore the repo](https://github.com/wjlgatech/kingdom-come) · [Run locally](#quickstart) · [Contribute](#contribute)
 
+## Start here
+
+These four docs are the project's home base. Read them in order if you're new.
+
+| Doc | What it answers | Who it's for |
+|-----|-----------------|--------------|
+| [What it is](docs/WHAT-IT-IS.md) | What problem does Kingdom Come solve and why does it matter? | Anyone — written so a 15-year-old can follow it. |
+| [How to use it](docs/HOW-TO-USE.md) | What you'll see and do in the app, screen by screen. | Students and teachers — no jargon. |
+| [How it works](docs/ARCHITECTURE.md) | The runtime, services, and design principles under the hood. | Contributors and engineers. |
+| [Roadmap](ROADMAP.md) | What's shipping now, what's next, what's later. | Anyone tracking the project's direction. |
+
 ## Why This Exists
 
 Formation teams often see warning signs late: disengagement, thin reflection habits, overloaded cohorts, and ministry outcomes that never make it back into curriculum design. Kingdom Come makes those signals visible early, explainable, and testable.
