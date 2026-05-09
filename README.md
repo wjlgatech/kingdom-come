@@ -72,13 +72,36 @@ curl -s -X POST http://127.0.0.1:8000/orchestration/actions \
 curl -s -X POST http://127.0.0.1:8000/outcomes \
   -H "Content-Type: application/json" \
   -d '{"student_id":"stu-7","impact_score":0.86,"description":"Led a supervised neighborhood cohort."}'
+
+curl -s http://127.0.0.1:8000/api/students | jq '.students | length'
+curl -s http://127.0.0.1:8000/api/cohorts/st-aloysius-s26/outcomes
 ```
+
+## For agents (Claude Code, Codex, OpenCode, …)
+
+Kingdom Come ships an MCP server that wraps the API as 9 tools — formation
+scoring, curriculum recommendations, class orchestration, outcome logging,
+cohort/student reads, and a one-shot mentor chat. Any MCP-aware harness
+can use it.
+
+```bash
+python -m pip install -e ".[mcp]"
+uvicorn backend.app:app --reload      # KC API on :8000
+python -m mcp_server.server           # MCP server over stdio
+```
+
+Wiring snippets for Claude Code, Codex, and other harnesses are in
+[`docs/AGENTS.md`](docs/AGENTS.md). A Claude Code plugin manifest at
+[`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) registers the
+server automatically.
 
 ## Project Structure
 
 ```text
-backend/       FastAPI app, database wiring, models, domain services
+backend/        FastAPI app, database wiring, models, domain services
 frontend/      Static product UI served by FastAPI
+mcp_server/    MCP server wrapping the API for agent harnesses
+.claude-plugin/ Claude Code plugin manifest
 tests/         Unit, API, static UI, and browser E2E tests
 docs/          Feature notes, architecture, and implementation plans
 ```
