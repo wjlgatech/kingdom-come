@@ -1,0 +1,20 @@
+{
+  "name": "kingdom-come",
+  "version": "0.1.0",
+  "description": "Predictive formation intelligence — dropout risk, curriculum recommendations, class orchestration, ministry outcomes, and a streaming AI mentor — exposed as MCP tools for Claude Code, Codex, OpenCode, and any agent harness that speaks MCP.",
+  "author": {
+    "name": "Kingdom Come contributors",
+    "url": "https://github.com/wjlgatech/kingdom-come"
+  },
+  "homepage": "https://github.com/wjlgatech/kingdom-come",
+  "license": "MIT",
+  "mcpServers": {
+    "kingdom-come": {
+      "command": "python",
+      "args": ["-m", "mcp_server.server"],
+      "env": {
+        "KC_BASE_URL": "${KC_BASE_URL:-http://127.0.0.1:8000}"
+      }
+    }
+  }
+}

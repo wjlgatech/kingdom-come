@@ -7,6 +7,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
 from backend.api.ws_chat import router as ws_chat_router
+from backend.fixtures import cohort as cohort_fixtures
 from backend.services.curriculum import recommend_content
 from backend.services.orchestration import class_orchestrator
 from backend.services.predictive import dropout_risk
@@ -170,3 +171,34 @@ def record_outcome(outcome: MinistryOutcomeRequest) -> dict[str, object]:
         effectiveness = "needs_support"
 
     return {**outcome.model_dump(), "effectiveness": effectiveness}
+
+
+# Agent-facing JSON read endpoints. Namespaced under /api so they don't
+# collide with the Jinja page routes at /students/{id} and /cohort.
+@app.get("/api/students")
+def list_students(cohort_id: str | None = None) -> dict[str, list[dict[str, object]]]:
+    return {"students": cohort_fixtures.list_students(cohort_id)}
+
+
+@app.get("/api/students/{student_id}")
+def get_student(student_id: str) -> dict[str, object]:
+    student = cohort_fixtures.get_student(student_id)
+    if student is None:
+        raise HTTPException(status_code=404, detail=f"student {student_id} not found")
+    return student
+
+
+@app.get("/api/cohorts/{cohort_id}")
+def get_cohort(cohort_id: str) -> dict[str, object]:
+    meta = cohort_fixtures.cohort_meta(cohort_id)
+    if meta is None:
+        raise HTTPException(status_code=404, detail=f"cohort {cohort_id} not found")
+    return meta
+
+
+@app.get("/api/cohorts/{cohort_id}/outcomes")
+def list_cohort_outcomes(cohort_id: str) -> dict[str, list[dict[str, object]]]:
+    outcomes = cohort_fixtures.list_cohort_outcomes(cohort_id)
+    if outcomes is None:
+        raise HTTPException(status_code=404, detail=f"cohort {cohort_id} not found")
+    return {"outcomes": outcomes}
