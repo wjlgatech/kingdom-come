@@ -11,6 +11,7 @@ Kingdom Come is intentionally small and contributor-friendly.
 - `backend/db/connection.py` defines the SQLAlchemy base, engine, session factory, and metadata initialization helper.
 - `frontend/` contains static HTML, CSS, and JavaScript served by FastAPI.
 - `mcp_server/server.py` wraps the FastAPI as MCP tools so agent harnesses (Claude Code, Codex, OpenCode, …) can call into a running KC instance over stdio.
+- `backend/services/prayer.py` runs the prayer + prophecy ledgers (in-process state, dataclass entities). Two ledgers, one weighing rule (1 Cor 14:29: 2-of-3), one visibility model. See [`PRAYER.md`](PRAYER.md) for the full data model.
 
 ## Agent integration
 

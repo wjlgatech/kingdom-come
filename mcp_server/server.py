@@ -150,6 +150,207 @@ async def list_cohort_outcomes(cohort_id: str) -> str:
 
 
 @mcp.tool()
+async def submit_prayer_request(
+    student_id: str,
+    petition: str,
+    visibility: str = "small_group",
+    recipient_ids: list[str] | None = None,
+    scripture: str | None = None,
+) -> str:
+    """Submit a prayer request to the prayer ledger. Visibility is one of
+    `private` / `small_group` / `cohort`; small_group requires recipient_ids
+    (the small-group peers who will pray + intercede). Returns the new
+    request including its id (use it to mark answered later)."""
+    async with httpx.AsyncClient(timeout=_timeout()) as client:
+        r = await client.post(
+            f"{_http_base()}/api/prayer/requests",
+            json={
+                "student_id": student_id,
+                "petition": petition,
+                "visibility": visibility,
+                "recipient_ids": recipient_ids or [],
+                "scripture": scripture,
+            },
+        )
+        r.raise_for_status()
+        return _format(r.json())
+
+
+@mcp.tool()
+async def list_prayer_requests(
+    student_id: str | None = None,
+    status: str | None = None,
+    visible_to: str | None = None,
+) -> str:
+    """List prayer requests filtered by student_id / status / visible_to.
+    Status is one of `open`, `watching`, `answered_yes`, `partial`, `no`,
+    `superseded`. Pass `visible_to` to enforce the visibility policy from a
+    given viewer's perspective."""
+    params = {k: v for k, v in {
+        "student_id": student_id, "status": status, "visible_to": visible_to,
+    }.items() if v is not None}
+    async with httpx.AsyncClient(timeout=_timeout()) as client:
+        r = await client.get(f"{_http_base()}/api/prayer/requests", params=params)
+        r.raise_for_status()
+        return _format(r.json())
+
+
+@mcp.tool()
+async def mark_prayer_answered(
+    prayer_id: str,
+    status: str,
+    testimony: str,
+    witnesses: list[str] | None = None,
+) -> str:
+    """Mark a prayer request answered. Status is one of `answered_yes`,
+    `partial`, `no`, `superseded`. Testimony is required and joins the
+    track record."""
+    async with httpx.AsyncClient(timeout=_timeout()) as client:
+        r = await client.post(
+            f"{_http_base()}/api/prayer/requests/{prayer_id}/answer",
+            json={"status": status, "testimony": testimony, "witnesses": witnesses or []},
+        )
+        r.raise_for_status()
+        return _format(r.json())
+
+
+@mcp.tool()
+async def add_intercession(prayer_id: str, peer_id: str, message: str = "") -> str:
+    """Record that a small-group peer is interceding for a prayer request.
+    The message is optional encouragement ("Praying for you, brother")."""
+    async with httpx.AsyncClient(timeout=_timeout()) as client:
+        r = await client.post(
+            f"{_http_base()}/api/prayer/requests/{prayer_id}/intercessions",
+            json={"peer_id": peer_id, "message": message},
+        )
+        r.raise_for_status()
+        return _format(r.json())
+
+
+@mcp.tool()
+async def submit_prophecy(
+    speaker_id: str,
+    addressed_to: str,
+    word: str,
+    weigher_ids: list[str],
+    visibility: str = "small_group",
+) -> str:
+    """Record a prophetic word. weigher_ids must list 3 distinct weighers
+    (2 peers + 1 leader) per the 1 Cor 14:29 weighing rule. The prophecy
+    enters status `spoken` and moves to `weighing` once any judgment lands."""
+    async with httpx.AsyncClient(timeout=_timeout()) as client:
+        r = await client.post(
+            f"{_http_base()}/api/prophecies",
+            json={
+                "speaker_id": speaker_id,
+                "addressed_to": addressed_to,
+                "word": word,
+                "weigher_ids": weigher_ids,
+                "visibility": visibility,
+            },
+        )
+        r.raise_for_status()
+        return _format(r.json())
+
+
+@mcp.tool()
+async def weigh_prophecy(
+    prophecy_id: str,
+    weigher_id: str,
+    judgment: str,
+    notes: str = "",
+) -> str:
+    """Cast one of the three weighings on a prophecy. Judgment is one of
+    `confirm`, `refine`, `reject`. Two confirms lock the status to
+    `confirmed`; two rejects to `rejected`; any refine after one judgment
+    moves to `refined`."""
+    async with httpx.AsyncClient(timeout=_timeout()) as client:
+        r = await client.post(
+            f"{_http_base()}/api/prophecies/{prophecy_id}/weighings",
+            json={"weigher_id": weigher_id, "judgment": judgment, "notes": notes},
+        )
+        r.raise_for_status()
+        return _format(r.json())
+
+
+@mcp.tool()
+async def record_prophecy_fulfillment(
+    prophecy_id: str,
+    status: str,
+    testimony: str,
+    witnesses: list[str] | None = None,
+) -> str:
+    """Record whether a confirmed prophecy was fulfilled. Status is one of
+    `pending`, `fulfilled`, `partial`, `unfulfilled`. Testimony is required
+    for non-pending status. Only confirmed prophecies accept fulfillment."""
+    async with httpx.AsyncClient(timeout=_timeout()) as client:
+        r = await client.post(
+            f"{_http_base()}/api/prophecies/{prophecy_id}/fulfillment",
+            json={"status": status, "testimony": testimony, "witnesses": witnesses or []},
+        )
+        r.raise_for_status()
+        return _format(r.json())
+
+
+@mcp.tool()
+async def list_prophecies(
+    speaker_id: str | None = None,
+    addressed_to: str | None = None,
+    status: str | None = None,
+    visible_to: str | None = None,
+) -> str:
+    """List prophecies filtered by speaker / recipient / status / visibility."""
+    params = {k: v for k, v in {
+        "speaker_id": speaker_id, "addressed_to": addressed_to,
+        "status": status, "visible_to": visible_to,
+    }.items() if v is not None}
+    async with httpx.AsyncClient(timeout=_timeout()) as client:
+        r = await client.get(f"{_http_base()}/api/prophecies", params=params)
+        r.raise_for_status()
+        return _format(r.json())
+
+
+@mcp.tool()
+async def get_prayer_track_record(student_id: str) -> str:
+    """Get a student's track record across both ledgers: prayer answer
+    rate + by-status counts; prophecy confirmation rate + fulfillment
+    rate + by-status counts. No content (no petitions, no testimonies),
+    only counts and rates."""
+    async with httpx.AsyncClient(timeout=_timeout()) as client:
+        r = await client.get(f"{_http_base()}/api/prayer/track-record/{student_id}")
+        r.raise_for_status()
+        return _format(r.json())
+
+
+@mcp.tool()
+async def get_cohort_prayer_rhythm(cohort_id: str) -> str:
+    """Director-facing aggregate: per-student prayer/prophecy/weighing/
+    intercession counts. Counts only — never content. Use this to see who
+    has gone quiet spiritually without invading their interior life."""
+    async with httpx.AsyncClient(timeout=_timeout()) as client:
+        r = await client.get(f"{_http_base()}/api/cohorts/{cohort_id}/prayer-rhythm")
+        if r.status_code == 404:
+            return _format({"error": "cohort_not_found", "cohort_id": cohort_id})
+        r.raise_for_status()
+        return _format(r.json())
+
+
+@mcp.tool()
+async def set_cohort_tradition(cohort_id: str, tradition: str) -> str:
+    """Set the cohort's tradition policy. Tradition is one of `catholic`
+    (lectio + spiritual reading default) or `charismatic` (real-time
+    prophetic word default). Same data model serves both; this flag flips
+    copy and defaults."""
+    async with httpx.AsyncClient(timeout=_timeout()) as client:
+        r = await client.put(
+            f"{_http_base()}/api/cohorts/{cohort_id}/policy",
+            json={"tradition": tradition},
+        )
+        r.raise_for_status()
+        return _format(r.json())
+
+
+@mcp.tool()
 async def chat_with_mentor(student_id: str, message: str) -> str:
     """Send one message to the AI mentor for `student_id` over the WS chat
     pipeline and return the recalled memory (if any) plus the full response.

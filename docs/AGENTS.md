@@ -17,6 +17,17 @@ MCP-aware agent can call. One server, every framework.
 | `get_cohort` | Get cohort metadata and director. |
 | `list_cohort_outcomes` | List all outcomes for a cohort, newest first. |
 | `chat_with_mentor` | Send one message to the mentor pipeline; returns recalled memory + full reply. |
+| `submit_prayer_request` | Add a petition to the prayer ledger (visibility: private / small_group / cohort). |
+| `list_prayer_requests` | List prayers, filtered by student / status / viewer. |
+| `mark_prayer_answered` | Resolve a prayer with a structured status + testimony. |
+| `add_intercession` | Record a small-group peer interceding for a prayer. |
+| `submit_prophecy` | Speak a prophetic word; designate 3 weighers (2 peers + 1 leader). |
+| `weigh_prophecy` | Cast one of the three weighings (`confirm` / `refine` / `reject`). |
+| `record_prophecy_fulfillment` | Track whether a confirmed prophecy was fulfilled. |
+| `list_prophecies` | List prophecies, filtered by speaker / recipient / status / viewer. |
+| `get_prayer_track_record` | Per-student aggregate: answer rate, confirmation rate, fulfillment rate. |
+| `get_cohort_prayer_rhythm` | Director-facing aggregate counts. **Never returns content** — only counts. |
+| `set_cohort_tradition` | Flip the cohort's tradition policy (`catholic` / `charismatic`). |
 
 ## Setup
 
@@ -122,6 +133,55 @@ A formation director logging a field outcome:
 
 ```
 agent: log_outcome("stu-anna-t", 0.86, "Led a supervised neighborhood cohort.")
+```
+
+A prayer + prophecy lifecycle from the agent:
+
+```
+# Submit a prayer with small-group recipients
+agent: submit_prayer_request(
+    student_id="stu-marcus-r",
+    petition="Wisdom for the Mission Theology essay.",
+    recipient_ids=["stu-luca-b", "stu-grace-w"],
+)
+# returns {"id": "pr-...", "status": "open", ...}
+
+# Peers intercede
+agent: add_intercession("pr-...", peer_id="stu-luca-b", message="Praying for you, brother.")
+
+# Mark answered with structured status + testimony
+agent: mark_prayer_answered(
+    prayer_id="pr-...",
+    status="answered_yes",
+    testimony="Got an A and the prof affirmed the angle.",
+    witnesses=["stu-luca-b"],
+)
+
+# Speak a prophecy with three weighers (2 peers + 1 leader)
+agent: submit_prophecy(
+    speaker_id="stu-marcus-r",
+    addressed_to="stu-anna-t",
+    word="A season of unexpected leadership.",
+    weigher_ids=["stu-luca-b", "stu-grace-w", "fd-theresa"],
+)
+# returns {"id": "ph-...", "status": "spoken", ...}
+
+# Two weighers confirm — server auto-resolves to "confirmed"
+agent: weigh_prophecy("ph-...", weigher_id="stu-luca-b", judgment="confirm")
+agent: weigh_prophecy("ph-...", weigher_id="fd-theresa", judgment="confirm")
+
+# Months later, fulfillment is recorded
+agent: record_prophecy_fulfillment(
+    prophecy_id="ph-...",
+    status="fulfilled",
+    testimony="Anna was elected to the parish council in November.",
+    witnesses=["fd-theresa"],
+)
+
+# Pull the track record (counts + rates only)
+agent: get_prayer_track_record("stu-marcus-r")
+# {prayer: {total: 1, answer_rate: 1.0, ...},
+#  prophecy: {total_spoken: 1, confirmation_rate: 1.0, fulfillment: {fulfillment_rate: 1.0}}}
 ```
 
 ## Notes

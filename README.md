@@ -15,6 +15,7 @@ These four docs are the project's home base. Read them in order if you're new.
 | [What it is](docs/WHAT-IT-IS.md) | What problem does Kingdom Come solve and why does it matter? | Anyone — written so a 15-year-old can follow it. |
 | [How to use it](docs/HOW-TO-USE.md) | What you'll see and do in the app, screen by screen. | Students and teachers — no jargon. |
 | [How it works](docs/ARCHITECTURE.md) | The runtime, services, and design principles under the hood. | Contributors and engineers. |
+| [Prayer + prophecy](docs/PRAYER.md) | The two track-record ledgers and the 2-of-3 weighing rule. | Contributors and formation directors. |
 | [Roadmap](ROADMAP.md) | What's shipping now, what's next, what's later. | Anyone tracking the project's direction. |
 
 ## Why This Exists
@@ -75,14 +76,29 @@ curl -s -X POST http://127.0.0.1:8000/outcomes \
 
 curl -s http://127.0.0.1:8000/api/students | jq '.students | length'
 curl -s http://127.0.0.1:8000/api/cohorts/st-aloysius-s26/outcomes
+
+# Prayer + prophecy track records (see docs/PRAYER.md)
+curl -s -X POST http://127.0.0.1:8000/api/prayer/requests \
+  -H "Content-Type: application/json" \
+  -d '{"student_id":"stu-marcus-r","petition":"Wisdom for the Mission Theology essay.","recipient_ids":["stu-luca-b","stu-grace-w"]}'
+curl -s http://127.0.0.1:8000/api/prayer/track-record/stu-marcus-r
+curl -s http://127.0.0.1:8000/api/cohorts/st-aloysius-s26/prayer-rhythm
 ```
+
+## Prayer + prophecy track records
+
+Two parallel ledgers with longitudinal track records — was this prayer
+answered? was this prophecy confirmed by 2-of-3 weighers? was it ultimately
+fulfilled? Read [`docs/PRAYER.md`](docs/PRAYER.md) for the full data model,
+the 1 Cor 14:29 weighing rule, and the visibility / track-record stats.
 
 ## For agents (Claude Code, Codex, OpenCode, …)
 
-Kingdom Come ships an MCP server that wraps the API as 9 tools — formation
+Kingdom Come ships an MCP server that wraps the API as 20 tools — formation
 scoring, curriculum recommendations, class orchestration, outcome logging,
-cohort/student reads, and a one-shot mentor chat. Any MCP-aware harness
-can use it.
+cohort/student reads, the AI mentor chat, and the prayer + prophecy ledgers
+(submit, weigh, mark answered, record fulfillment, pull track records). Any
+MCP-aware harness can use it.
 
 ```bash
 python -m pip install -e ".[mcp]"
