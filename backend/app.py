@@ -209,7 +209,7 @@ def list_cohort_outcomes(cohort_id: str) -> dict[str, list[dict[str, object]]]:
 class PrayerRequestIn(BaseModel):
     student_id: str = Field(min_length=1)
     petition: str = Field(min_length=1)
-    visibility: str = "small_group"
+    visibility: str = "private"
     recipient_ids: list[str] = Field(default_factory=list)
     scripture: str | None = None
 

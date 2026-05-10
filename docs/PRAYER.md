@@ -24,7 +24,7 @@ Every resolved prayer carries:
 
 ### Visibility
 
-Three levels: `private`, `small_group` (default; speaker explicitly designates recipient peers), `cohort`. The `visible_to=<viewer_id>` filter on list endpoints enforces the policy from the viewer's perspective. A director can audit aggregate counts without ever reading content via `/api/cohorts/{id}/prayer-rhythm`.
+Three levels: `private` (default for prayer — interior life is private until the petitioner shares it), `small_group` (speaker explicitly designates recipient peers), `cohort`. The `visible_to=<viewer_id>` filter on list endpoints enforces the policy from the viewer's perspective. A director can audit aggregate counts without ever reading content via `/api/cohorts/{id}/prayer-rhythm`. Prophecy uses the same three levels but defaults to `small_group`, since a prophecy is spoken to others by definition.
 
 ### Intercessions
 
