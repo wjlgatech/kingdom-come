@@ -132,7 +132,7 @@ def submit_prayer(
     *,
     student_id: str,
     petition: str,
-    visibility: Visibility = "small_group",
+    visibility: Visibility = "private",
     recipient_ids: list[str] | None = None,
     scripture: str | None = None,
 ) -> PrayerRequest:

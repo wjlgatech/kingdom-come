@@ -27,12 +27,27 @@ def test_submit_prayer_creates_open_request_with_id_and_timestamp():
     pr = prayer.submit_prayer(
         student_id="stu-marcus-r",
         petition="Wisdom about Mission Theology essay",
+        visibility="small_group",
         recipient_ids=["stu-luca-b", "stu-grace-w"],
     )
     assert pr.id.startswith("pr-")
     assert pr.status == "open"
     assert pr.created_at  # ISO timestamp
     assert pr.recipient_ids == ["stu-luca-b", "stu-grace-w"]
+
+
+def test_default_visibilities_differ_per_ledger():
+    """Prayer is interior-by-default (private); prophecy is by-nature spoken
+    to others (small_group)."""
+    pr = prayer.submit_prayer(student_id="stu-marcus-r", petition="...")
+    assert pr.visibility == "private"
+    p = prayer.submit_prophecy(
+        speaker_id="stu-marcus-r",
+        addressed_to="stu-anna-t",
+        word="A season of unexpected leadership.",
+        weigher_ids=["stu-luca-b", "stu-grace-w", "fd-theresa"],
+    )
+    assert p.visibility == "small_group"
 
 
 def test_submit_prayer_rejects_empty_petition():

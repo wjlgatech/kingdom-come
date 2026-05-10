@@ -153,14 +153,15 @@ async def list_cohort_outcomes(cohort_id: str) -> str:
 async def submit_prayer_request(
     student_id: str,
     petition: str,
-    visibility: str = "small_group",
+    visibility: str = "private",
     recipient_ids: list[str] | None = None,
     scripture: str | None = None,
 ) -> str:
     """Submit a prayer request to the prayer ledger. Visibility is one of
-    `private` / `small_group` / `cohort`; small_group requires recipient_ids
-    (the small-group peers who will pray + intercede). Returns the new
-    request including its id (use it to mark answered later)."""
+    `private` (default — only the petitioner sees the petition; the answer
+    can be promoted later) / `small_group` (requires recipient_ids — the
+    small-group peers who will pray + intercede) / `cohort`. Returns the
+    new request including its id (use it to mark answered later)."""
     async with httpx.AsyncClient(timeout=_timeout()) as client:
         r = await client.post(
             f"{_http_base()}/api/prayer/requests",
