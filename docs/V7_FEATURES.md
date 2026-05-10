@@ -45,13 +45,29 @@ Agent-facing JSON reads, namespaced under `/api/` so they don't collide with the
 
 Backed by `backend/fixtures/cohort.py` (ported from `frontend/cohort_data.js`).
 
+## Prayer + prophecy ledgers
+
+Two parallel ledgers with longitudinal track records. Prayer goes
+`open → answered_{yes,partial,no,superseded}` with a structured status and
+free-text testimony. Prophecy goes `spoken → weighing → confirmed/refined/rejected → fulfilled/partial/unfulfilled`,
+with the 2-of-3 weighing rule (1 Cor 14:29) enforced server-side: 3 distinct
+weighers, 2 confirms locks to `confirmed`, 2 rejects to `rejected`, any
+`refine` after the second judgment to `refined`. Cohort-level `tradition`
+policy (`catholic` / `charismatic`) flips defaults; same data model serves both.
+
+Endpoints at `/api/prayer/...`, `/api/prophecies/...`,
+`/api/prayer/track-record/{student_id}`, `/api/cohorts/{id}/prayer-rhythm`,
+`/api/cohorts/{id}/policy`. Full data model and API reference in
+[`PRAYER.md`](PRAYER.md).
+
 ## MCP server
 
-`mcp_server/server.py` exposes nine MCP tools over stdio so any MCP-aware agent harness (Claude Code, Codex, OpenCode, …) can use Kingdom Come as a tool surface:
+`mcp_server/server.py` exposes 20 MCP tools over stdio so any MCP-aware agent harness (Claude Code, Codex, OpenCode, …) can use Kingdom Come as a tool surface:
 
-- `dropout_risk`, `curriculum_recommend`, `orchestration_plan`, `log_outcome`
-- `list_students`, `get_student`, `get_cohort`, `list_cohort_outcomes`
-- `chat_with_mentor` (drains the WS pipeline; returns memory + full reply)
+- Formation engines: `dropout_risk`, `curriculum_recommend`, `orchestration_plan`, `log_outcome`
+- Cohort/student data: `list_students`, `get_student`, `get_cohort`, `list_cohort_outcomes`
+- Mentor chat: `chat_with_mentor` (drains the WS pipeline; returns memory + full reply)
+- Prayer + prophecy ledgers: `submit_prayer_request`, `list_prayer_requests`, `mark_prayer_answered`, `add_intercession`, `submit_prophecy`, `weigh_prophecy`, `record_prophecy_fulfillment`, `list_prophecies`, `get_prayer_track_record`, `get_cohort_prayer_rhythm`, `set_cohort_tradition`
 
 Install with `pip install -e ".[mcp]"` and run `python -m mcp_server.server`. Wiring snippets for each harness live in [`AGENTS.md`](AGENTS.md); the Claude Code plugin manifest is at `.claude-plugin/plugin.json`.
 
