@@ -476,3 +476,34 @@ def test_cohort_policy_rejects_unknown_tradition():
         json={"tradition": "buddhist"},
     )
     assert bad.status_code == 422
+
+
+# ---------- demo seed ----------
+
+def test_seed_demo_populates_both_ledgers_and_is_idempotent():
+    prayer.seed_demo()
+    first_prayers = len(prayer.list_prayers())
+    first_prophecies = len(prayer.list_prophecies())
+    assert first_prayers > 0
+    assert first_prophecies > 0
+    # Idempotent: a second call must not duplicate the demo week.
+    prayer.seed_demo()
+    assert len(prayer.list_prayers()) == first_prayers
+    assert len(prayer.list_prophecies()) == first_prophecies
+
+
+def test_seed_demo_gives_marcus_a_word_to_weigh_and_a_confirmed_word():
+    prayer.seed_demo()
+    visible = prayer.list_prophecies(visible_to="stu-marcus-r")
+    to_weigh = [
+        p for p in visible
+        if "stu-marcus-r" in p.weigher_ids
+        and not any(w["weigher_id"] == "stu-marcus-r" for w in p.weighings)
+        and p.status in ("spoken", "weighing")
+    ]
+    confirmed_over_marcus = [
+        p for p in visible if p.addressed_to == "stu-marcus-r" and p.status == "confirmed"
+    ]
+    assert to_weigh, "seed should leave Marcus one word awaiting his discernment"
+    assert confirmed_over_marcus, "seed should leave Marcus a confirmed word with open fulfillment"
+    assert all(p.fulfillment is None for p in confirmed_over_marcus)

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
@@ -21,12 +22,18 @@ FRONTEND_DIR = PROJECT_ROOT / "frontend"
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 app.include_router(ws_chat_router)
 
+# Opt-in demo data for the prayer + prophecy ledgers (hosted demos, local
+# tours). Never seeded by default so tests and API consumers start empty.
+if os.environ.get("KC_DEMO_SEED") == "1":
+    prayer_service.seed_demo()
+
 templates = Jinja2Templates(directory=FRONTEND_DIR)
 
 
 SEMINARIAN_SUBNAV = [
     {"href": "/me", "label": "Today", "key": "today"},
     {"href": "/me/chat", "label": "Mentor", "key": "mentor"},
+    {"href": "/me/prayer", "label": "Prayer", "key": "prayer"},
     {"href": "/me/timeline", "label": "Arc", "key": "arc"},
 ]
 DIRECTOR_SUBNAV = [
@@ -82,6 +89,15 @@ def chat_page(request: Request):
         request,
         "chat.html",
         {"subnav": _seminarian_subnav("mentor"), "required_role": "seminarian"},
+    )
+
+
+@app.get("/me/prayer", include_in_schema=False)
+def prayer_page(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "prayer.html",
+        {"subnav": _seminarian_subnav("prayer"), "required_role": "seminarian"},
     )
 
 
