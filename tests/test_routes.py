@@ -56,6 +56,15 @@ def test_admin_workbench_route_serves_index_html():
     assert "data-testid=\"dropout-form\"" in response.text
 
 
+def test_prayer_returns_ledger_surface():
+    response = client.get("/me/prayer")
+    assert response.status_code == 200
+    assert "data-testid=\"prayer-tabs\"" in response.text
+    assert "data-testid=\"prayer-list\"" in response.text
+    assert "data-testid=\"prayer-new-petition\"" in response.text
+    assert "data-testid=\"weigh-list\"" in response.text
+
+
 def test_timeline_returns_arc_surface():
     response = client.get("/me/timeline")
     assert response.status_code == 200
@@ -87,8 +96,10 @@ def test_subnav_active_state_set_per_route():
     cohort_resp = client.get("/cohort").text
     triage_resp = client.get("/cohort/triage").text
     groups_resp = client.get("/cohort/groups").text
+    prayer_resp = client.get("/me/prayer").text
     assert "aria-current=\"page\">Today" in me_resp
     assert "aria-current=\"page\">Mentor" in chat_resp
+    assert "aria-current=\"page\">Prayer" in prayer_resp
     assert "aria-current=\"page\">Arc" in arc_resp
     assert "aria-current=\"page\">Cohort" in cohort_resp
     assert "aria-current=\"page\">Triage" in triage_resp
@@ -98,6 +109,7 @@ def test_subnav_active_state_set_per_route():
 def test_seminarian_subnav_includes_arc_after_p2():
     response = client.get("/me").text
     assert ">Today<" in response and ">Mentor<" in response and ">Arc<" in response
+    assert ">Prayer<" in response
 
 
 def test_director_subnav_includes_cohort_and_groups_after_p2():
@@ -114,6 +126,8 @@ def test_per_page_assets_are_referenced():
         ("/me", "me.js"),
         ("/me/chat", "chat.css"),
         ("/me/chat", "chat.js"),
+        ("/me/prayer", "prayer.css"),
+        ("/me/prayer", "prayer.js"),
         ("/me/timeline", "timeline.css"),
         ("/me/timeline", "timeline.js"),
         ("/cohort", "cohort_overview.css"),
