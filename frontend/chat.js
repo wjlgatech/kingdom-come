@@ -138,5 +138,8 @@ messageInput.addEventListener("keydown", (e) => {
   }
 });
 
-// Auto-focus input on load.
+// Auto-focus input and open the socket on load, so the status pill reads
+// "connected" instead of sitting on the static "disconnected" text until
+// the first send (REC-3: the thread should feel alive on arrival).
 messageInput.focus();
+ensureSocket();

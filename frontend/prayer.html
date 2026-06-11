@@ -1,0 +1,42 @@
+{% extends "_base.html" %}
+{% block title %}Prayer — Kingdom Come{% endblock %}
+{% block stylesheet %}<link rel="stylesheet" href="/static/prayer.css" />{% endblock %}
+{% block main_class %}prayer-main{% endblock %}
+{% block main %}
+<script>document.body.dataset.role = "seminarian";</script>
+<section class="prayer-header">
+  <h1 class="prayer-headline">Carried in <em>prayer</em>.</h1>
+  <p class="prayer-track-record" data-testid="prayer-track-record">
+    <span class="skeleton" style="display: inline-block; width: 260px; height: 1.2em; vertical-align: middle;"></span>
+  </p>
+</section>
+
+<div class="prayer-tabs" role="tablist" aria-label="Prayer ledgers" data-testid="prayer-tabs">
+  <button role="tab" id="tab-prayers" aria-selected="true" aria-controls="panel-prayers" data-testid="prayer-tab-prayers">My prayers</button>
+  <button role="tab" id="tab-words" aria-selected="false" aria-controls="panel-words" tabindex="-1" data-testid="prayer-tab-words">Words</button>
+  <button role="tab" id="tab-weigh" aria-selected="false" aria-controls="panel-weigh" tabindex="-1" data-testid="prayer-tab-weigh">To weigh <span class="weigh-count" data-testid="weigh-count" hidden></span></button>
+</div>
+
+<section id="panel-prayers" role="tabpanel" aria-labelledby="tab-prayers" data-testid="prayer-panel-prayers">
+  <div class="panel-actions">
+    <button type="button" class="btn btn-primary" data-testid="prayer-new-petition">+ New petition</button>
+  </div>
+  <div class="ledger-list" data-testid="prayer-list" aria-busy="true" aria-label="Loading prayers"></div>
+</section>
+
+<section id="panel-words" role="tabpanel" aria-labelledby="tab-words" data-testid="prayer-panel-words" hidden>
+  <div class="panel-actions">
+    <button type="button" class="btn btn-secondary" data-testid="prayer-speak-word">+ Speak a word</button>
+  </div>
+  <div class="ledger-list" data-testid="word-list" aria-busy="true" aria-label="Loading words"></div>
+</section>
+
+<section id="panel-weigh" role="tabpanel" aria-labelledby="tab-weigh" data-testid="prayer-panel-weigh" hidden>
+  <p class="weigh-rule">“Let two or three prophets speak, and let the others weigh what is said.” — 1 Corinthians 14:29</p>
+  <div class="ledger-list" data-testid="weigh-list" aria-busy="true" aria-label="Loading words to weigh"></div>
+</section>
+{% endblock %}
+
+{% block script %}
+<script type="module" src="/static/prayer.js"></script>
+{% endblock %}

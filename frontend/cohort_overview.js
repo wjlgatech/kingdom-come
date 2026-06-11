@@ -1,4 +1,4 @@
-import { COHORT } from "/static/cohort_data.js";
+import { COHORT, DEMO_DIRECTOR } from "/static/cohort_data.js";
 import { STATUS, statusFromRisk, statusLabel, statusClass, reasonsToSentence, avatarBackground, avatarInitials } from "/static/status.js";
 
 const STATUS_PRIORITY = { [STATUS.AT_RISK]: 0, [STATUS.CHECK_IN]: 1, [STATUS.STEADY]: 2, [STATUS.THRIVING]: 3 };
@@ -170,6 +170,71 @@ function renderSnippet(scored) {
   });
 }
 
+// ---- prayer rhythm (counts only — never content; see docs/PRAYER.md) ----
+
+async function renderPrayerRhythm() {
+  const line = document.querySelector("[data-testid='cohort-rhythm-line']");
+  try {
+    const res = await fetch(`/api/cohorts/${DEMO_DIRECTOR.cohort_id}/prayer-rhythm`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { rhythm } = await res.json();
+    const sums = rhythm.reduce(
+      (acc, r) => ({
+        prayers: acc.prayers + r.prayers_submitted,
+        answered: acc.answered + r.prayers_answered,
+        words: acc.words + r.prophecies_spoken,
+        weighings: acc.weighings + r.weighings_done,
+        intercessions: acc.intercessions + r.intercessions_offered,
+      }),
+      { prayers: 0, answered: 0, words: 0, weighings: 0, intercessions: 0 },
+    );
+    const praying = rhythm.filter((r) => r.prayers_submitted + r.intercessions_offered > 0).length;
+    if (sums.prayers + sums.words === 0) {
+      line.textContent = "The ledgers are quiet so far this term. Rhythm appears as petitions and words are brought.";
+      return;
+    }
+    line.textContent =
+      `${sums.prayers} petitions carried (${sums.answered} answered) · ` +
+      `${sums.intercessions} intercessions offered · ` +
+      `${sums.words} words spoken, ${sums.weighings} weighings given · ` +
+      `${praying} of ${rhythm.length} students active in the ledgers.`;
+  } catch {
+    line.textContent = "Couldn't load the prayer rhythm right now.";
+  }
+}
+
+async function initTraditionToggle() {
+  const toggle = document.querySelector("[data-testid='tradition-toggle']");
+  if (!toggle) return;
+  const buttons = Array.from(toggle.querySelectorAll("button"));
+  const reflect = (tradition) => {
+    buttons.forEach((b) => {
+      b.setAttribute("aria-pressed", b.dataset.tradition === tradition ? "true" : "false");
+    });
+  };
+  try {
+    const res = await fetch(`/api/cohorts/${DEMO_DIRECTOR.cohort_id}/policy`);
+    const policy = await res.json();
+    reflect(policy.tradition);
+  } catch {
+    reflect("catholic");
+  }
+  buttons.forEach((b) => {
+    b.addEventListener("click", async () => {
+      reflect(b.dataset.tradition);
+      try {
+        await fetch(`/api/cohorts/${DEMO_DIRECTOR.cohort_id}/policy`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tradition: b.dataset.tradition }),
+        });
+      } catch {
+        /* leave the optimistic state; next load re-reads the policy */
+      }
+    });
+  });
+}
+
 async function init() {
   // Chart is synthetic — render immediately.
   renderChart(buildEngagementTrend());
@@ -197,3 +262,5 @@ async function init() {
 }
 
 init();
+renderPrayerRhythm();
+initTraditionToggle();

@@ -20,7 +20,7 @@ if (!student) {
 }
 
 async function initProfile() {
-  const profile = getProfile(studentId);
+  const profile = await getProfile(studentId);
 
   // Header
   const avatar = document.querySelector("[data-testid='profile-avatar']");
@@ -49,6 +49,25 @@ async function initProfile() {
   pill.className = `status-pill ${statusClass(status)}`;
   pill.textContent = statusLabel(status);
   pillSlot.appendChild(pill);
+
+  // Prayer rhythm — counts only, never content (visibility policy lives
+  // server-side; the director sees rhythm, not petitions).
+  fetch(`/api/prayer/track-record/${studentId}`)
+    .then((r) => (r.ok ? r.json() : null))
+    .then((data) => {
+      if (!data) return;
+      const slot = document.querySelector("[data-testid='profile-prayer-rhythm']");
+      const pr = data.prayer;
+      const ph = data.prophecy;
+      if (pr.total + ph.total_spoken === 0) {
+        slot.textContent = "Prayer ledger: quiet so far this term.";
+        return;
+      }
+      slot.textContent =
+        `Prayer: ${pr.total} petition${pr.total === 1 ? "" : "s"}, ${pr.answered_favorable} answered · ` +
+        `Words: ${ph.total_spoken} spoken, ${ph.by_status?.confirmed ?? 0} confirmed.`;
+    })
+    .catch(() => {});
 
   // Tabs
   setupTabs();
