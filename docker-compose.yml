@@ -1,0 +1,29 @@
+# Kingdom Come — local/demo deployment.
+#
+#   docker compose up --build       → demo mode (seeded ledgers, fake mentor)
+#
+# Real mentor: comment out LLM_FAKE_RESPONSE below (it takes precedence over
+# the key in llm_client.py) and run `OPENAI_API_KEY=sk-... docker compose up`.
+# Embeddings switch to OpenAI automatically once the key is present.
+services:
+  app:
+    build: .
+    # Bind to localhost only — the app has no auth yet (demo/pilot posture).
+    # Change to "8000:8000" deliberately to expose on your LAN.
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      KC_DEMO_SEED: "1"
+      LLM_FAKE_RESPONSE: "Walk gently into this week. What you named is worth one more honest paragraph."
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # REDIS_URL: redis://redis:6379/0   # uncomment with the redis service
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Optional real Redis for activity events; the app falls back to an
+  # in-process fake when REDIS_URL is unset.
+  # redis:
+  #   image: redis:7-alpine

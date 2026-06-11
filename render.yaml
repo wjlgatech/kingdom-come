@@ -1,0 +1,19 @@
+# Render blueprint — deploy Kingdom Come as a Docker web service.
+# https://render.com/docs/blueprint-spec
+#
+# Ships in demo mode (seeded ledgers, fake mentor) so the hosted demo works
+# with zero secrets. For the real mentor: set OPENAI_API_KEY in the Render
+# dashboard and clear LLM_FAKE_RESPONSE (the fake takes precedence).
+services:
+  - type: web
+    name: kingdom-come
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: KC_DEMO_SEED
+        value: "1"
+      - key: LLM_FAKE_RESPONSE
+        value: "Walk gently into this week. What you named is worth one more honest paragraph."
+      - key: OPENAI_API_KEY
+        sync: false

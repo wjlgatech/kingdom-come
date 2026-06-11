@@ -9,3 +9,4 @@ formation.db
 output/
 .gstack/
 design-preview.html
+*.egg-info/
