@@ -29,6 +29,26 @@ MCP-aware agent can call. One server, every framework.
 | `get_cohort_prayer_rhythm` | Director-facing aggregate counts. **Never returns content** — only counts. |
 | `set_cohort_tradition` | Flip the cohort's tradition policy (`catholic` / `charismatic`). |
 
+## Journeys, not just tools (UX parity with the webapp)
+
+The tools above are the API. For the *experience* — the same role-shaped
+journeys the webapp gives Marcus and Sister Theresa — the repo ships three
+agent skills under [`skills/`](../skills):
+
+| Skill | Webapp twin | What the agent does |
+|-------|------------|---------------------|
+| `morning-check-in` | `/me` | Greeting → named status with a plain-English reason → next curriculum step → open prayer items → offer the mentor. |
+| `cohort-triage` | `/cohort` + `/cohort/triage` | One-sentence cohort pulse → flagged students with named statuses + reasons + suggested actions → counts-only prayer rhythm. |
+| `prayer-ledger` | `/me/prayer` | Petitions, intercession, structured answers, prophecy weighing (2-of-3), fulfillment, track records — with the webapp's vocabulary and visibility guardrails. |
+
+Claude Code picks these up automatically when the plugin is installed. Other
+harnesses (Hermes, Codex, OpenCode) can use the same files as system-prompt
+playbooks — they are deliberately harness-neutral: each is a short markdown
+procedure over the MCP tools, encoding the status vocabulary
+(Thriving / Steady / Needs check-in / At risk), the plain-English reason
+translations, and the visibility guardrails so a conversation through an
+agent feels like the webapp, not like raw API calls.
+
 ## Setup
 
 Start the FastAPI app first — the MCP server is a thin client over the
@@ -89,6 +109,31 @@ command = "python"
 args = ["-m", "mcp_server.server"]
 env = { KC_BASE_URL = "http://127.0.0.1:8000" }
 ```
+
+### Hermes (Nous Research hermes-agent)
+
+Hermes manages MCP servers with the `hermes mcp` subcommand; configuration
+lives in `~/.hermes/config.yaml` under `mcp_servers`:
+
+```bash
+hermes mcp add kingdom-come --command python   # then follow the prompts
+hermes mcp test kingdom-come                   # verifies tool discovery
+```
+
+Or edit `~/.hermes/config.yaml` directly:
+
+```yaml
+mcp_servers:
+  kingdom-come:
+    command: python
+    args: ["-m", "mcp_server.server"]
+    env:
+      KC_BASE_URL: "http://127.0.0.1:8000"
+```
+
+For journey-level UX, drop the three skills from [`skills/`](../skills) into
+your Hermes skills directory (or paste them into the agent's instructions) —
+they are plain markdown playbooks over these tools.
 
 ### OpenCode / other MCP-aware harnesses
 

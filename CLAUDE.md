@@ -10,7 +10,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# One-time setup
+# 1-click install + stand up (demo seed + free-LLM chain auto-detected)
+./run.sh
+
+# One-time dev setup (tests need the dev extras + Playwright)
 python -m venv .venv && source .venv/bin/activate
 python -m pip install -e ".[dev]"
 python -m playwright install chromium
@@ -30,6 +33,12 @@ python -m pytest --ignore=tests/test_e2e.py --ignore=tests/test_e2e_kc.py
 
 # Syntax sanity check used in the README's "Test Matrix"
 python -m compileall backend tests
+
+# Run with seeded prayer/prophecy demo data (opt-in; tests rely on empty ledgers)
+KC_DEMO_SEED=1 uvicorn backend.app:app --reload
+
+# Container (verified): demo mode out of the box — see docs/DEPLOY.md
+docker compose up --build
 ```
 
 ## Architecture
@@ -40,13 +49,13 @@ FastAPI monolith serving JSON endpoints **and** server-rendered Jinja pages for 
 - `backend/services/` — pure domain functions; this is where business behavior lives and where new tests should be anchored. `predictive.dropout_risk`, `curriculum.recommend_content`, and `orchestration.class_orchestrator` are deliberately small and synchronous.
 - `backend/api/ws_chat.py` + `backend/services/ai_pipeline.py` — the streaming mentor chat. The WS contract: yield `{"memory": [...]}` **first** so the UI can render "Mentor remembers:" pills, then stream `{"chunk": "..."}` messages, then `{"done": true}`. Errors come back as `{"error": "..."}` without closing the socket. Don't reorder these.
 - `backend/services/vector_memory.py` — per-student in-process FAISS index keyed by `student_id`. State persists for the lifetime of the process; tests must call `vector_memory.reset()` between cases. Embeddings come from OpenAI when `OPENAI_API_KEY` is set, otherwise a deterministic hash-bucket fake (`EMBEDDING_FAKE=1` forces the fake even when a key is present).
-- `backend/services/llm_client.py` — set `LLM_FAKE_RESPONSE="..."` to bypass OpenAI; the fake streams the string word-by-word. Used by every E2E test.
+- `backend/services/llm_client.py` — mentor backend is a **fallback chain** (`resolve_chain()`, unit-tested in `tests/test_llm_client.py`): `LLM_FAKE_RESPONSE` short-circuits (every E2E test) → NVIDIA NIM (free; default `openai/gpt-oss-120b` — kimi-k2.6 leaks reasoning into `delta.content`, glm-5.1 is ~35s to first token) → local Ollama (always wired, `qwen2.5:7b`) → OpenRouter → OpenAI. Failure before first chunk advances the chain; mid-stream failure re-raises (never splice two providers' text). `LLM_MODEL` overrides the primary tier only. Sampling is pinned (`temperature=0.6`, `max_tokens=400`).
 - `backend/services/realtime.py` — Redis pub/sub for activity events. Falls back to `fakeredis` when `REDIS_URL` is unset. Tests must call `realtime.reset_for_tests()` between cases.
 - `backend/db/connection.py` + `backend/models/outcome.py` — SQLAlchemy 2.x `DeclarativeBase`. `init_db()` is opt-in; the running app does not auto-create tables. `DATABASE_URL` defaults to `sqlite:///./formation.db`.
 
 ### Two product surfaces share one backend
 
-1. **Redesigned per-persona surfaces** (the real product, anchored to the user stories): `/` (door), `/me`, `/me/chat`, `/me/timeline`, `/cohort`, `/cohort/triage`, `/cohort/groups`, `/students/{id}`. Each Jinja page extends `frontend/_base.html`, sets `required_role` (the base template's role gate reads this), and ships its own `*.css` + `*.js` files. Role + student id are persisted in `localStorage` (`kc-role`, `kc-student-id`) by `door.js`.
+1. **Redesigned per-persona surfaces** (the real product, anchored to the user stories): `/` (door), `/me`, `/me/chat`, `/me/prayer`, `/me/timeline`, `/cohort`, `/cohort/triage`, `/cohort/groups`, `/students/{id}`. Each Jinja page extends `frontend/_base.html`, sets `required_role` (the base template's role gate reads this), and ships its own `*.css` + `*.js` files. Role + student id are persisted in `localStorage` (`kc-role`, `kc-student-id`) by the door page's inline script.
 2. **Admin workbench** at `/admin/workbench` (serves `frontend/index.html`) — the original endpoint-shaped form playground. Kept for engineers / API debugging; do not regress it but do not extend it.
 
 ### Prayer + prophecy ledgers
@@ -56,6 +65,8 @@ FastAPI monolith serving JSON endpoints **and** server-rendered Jinja pages for 
 - The 2-of-3 rule lives in `_resolve_prophecy_status`. Submission requires 3 distinct weighers; the speaker cannot weigh their own word; weighers can only weigh once. Two confirms lock to `confirmed`; two rejects to `rejected`; any `refine` after a second judgment moves to `refined`.
 - Cohort-level **tradition policy** (`catholic` default, `charismatic` opt-in) is stored at `_state["policies"]` and exposed at `/api/cohorts/{id}/policy`. Same data model serves both traditions; the flag flips defaults and (eventually) UI copy.
 - State is in-process (`prayer._state`); tests must call `prayer.reset()` between cases. Persistence (SQLAlchemy-backed) is the natural next step but matches the existing in-memory-first pattern of `vector_memory` / `realtime`.
+- **UI:** seminarians work both ledgers at `/me/prayer` (`frontend/prayer.{html,css,js}` — tabs: My prayers / Words / To weigh; pastoral status labels live in `prayer.js`, e.g. `rejected` renders as "Not confirmed"). Directors get a counts-only rhythm section + tradition toggle on `/cohort` and a counts-only line on `/students/{id}` — never ledger content.
+- `prayer.seed_demo()` populates an idempotent demo week; the app calls it only when `KC_DEMO_SEED=1` (tests and fresh API consumers must start empty).
 - Track records: `prayer_track_record(student_id)` returns counts + answer rate; `prophecy_track_record(speaker_id)` returns counts + confirmation rate + fulfillment rate. `cohort_rhythm(student_ids)` is the director-facing aggregate — counts only, never content.
 - Endpoints at `/api/prayer/...` and `/api/prophecies/...` (note: the prophecy collection is at `/api/prophecies`, not `/api/prayer/prophecies`, because prophecy is a peer ledger, not a sub-resource of prayer). Track records at `/api/prayer/track-record/{student_id}` and `/api/cohorts/{id}/prayer-rhythm`.
 - 11 MCP tools wrap these endpoints (see `mcp_server/server.py`).
@@ -65,8 +76,14 @@ FastAPI monolith serving JSON endpoints **and** server-rendered Jinja pages for 
 - `mcp_server/server.py` exposes 20 tools over stdio via `FastMCP` (`mcp` SDK 1.x): the original 9 (`dropout_risk`, `curriculum_recommend`, `orchestration_plan`, `log_outcome`, `list_students`, `get_student`, `get_cohort`, `list_cohort_outcomes`, `chat_with_mentor`) plus 11 prayer/prophecy tools (`submit_prayer_request`, `list_prayer_requests`, `mark_prayer_answered`, `add_intercession`, `submit_prophecy`, `weigh_prophecy`, `record_prophecy_fulfillment`, `list_prophecies`, `get_prayer_track_record`, `get_cohort_prayer_rhythm`, `set_cohort_tradition`). Tools are thin `httpx` wrappers over the FastAPI; `chat_with_mentor` opens the WS, drains `memory + chunks + done`, and returns the whole reply (no streaming through MCP).
 - Configure via env: `KC_BASE_URL` (default `http://127.0.0.1:8000`), `KC_WS_URL` (derived if unset), `KC_TIMEOUT_S` (default 30). For offline agent demos use the same `EMBEDDING_FAKE=1` + `LLM_FAKE_RESPONSE=...` env vars the E2E tests use.
 - Agent-facing read endpoints live under **`/api/...`** (e.g. `/api/students/{id}`) so they don't collide with the Jinja page route at `/students/{id}`. When adding new agent reads, keep the namespace.
-- Cohort/student data comes from `backend/fixtures/cohort.py`, ported from `frontend/cohort_data.js`. The two are duplicated source-of-truth until the frontend migrates to fetch `/api/students` — keep them in sync until then.
-- `.claude-plugin/plugin.json` registers the MCP server with Claude Code; `docs/AGENTS.md` has the wiring snippets for Claude Code, Codex, and other MCP-aware harnesses.
+- Cohort/student data has a **single source of truth**: `backend/fixtures/cohort.py`. The frontend fetches it — `frontend/cohort_data.js` is an API-backed module (top-level await over `/api/students`; async `getProfile()` over `/api/students/{id}`) that keeps the old export interface. Do not reintroduce a static roster copy.
+- `.claude-plugin/plugin.json` registers the MCP server with Claude Code; `docs/AGENTS.md` has the wiring snippets for Claude Code, Codex, Hermes, and other MCP-aware harnesses.
+- **Journey skills** live in `skills/` (`morning-check-in`, `cohort-triage`, `prayer-ledger`) — harness-neutral playbooks that give agents the webapp's role-shaped UX over the MCP tools. If you change status vocabulary, reason translations, or ledger guardrails, update the skills too.
+
+### Deployment
+
+- `Dockerfile` (verified: build + run + smoke), `docker-compose.yml` (demo mode), `render.yaml`, `fly.toml`, guide in `docs/DEPLOY.md`. The image installs `.[standalone]` because `realtime.py` imports `fakeredis` when `REDIS_URL` is unset.
+- `LLM_FAKE_RESPONSE` takes precedence over `OPENAI_API_KEY` in `llm_client.py` — switching a deployment to the real mentor means removing the fake var, not just adding the key.
 
 ### Frontend conventions
 

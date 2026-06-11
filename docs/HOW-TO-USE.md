@@ -15,7 +15,7 @@ If you ever want to switch (or you picked the wrong one), look for the **"Switch
 
 ## If you're a student
 
-Three places to go, listed across the top of the screen:
+Four places to go, listed across the top of the screen:
 
 ### 1. Today
 
@@ -33,7 +33,27 @@ A chat window. Type whatever's on your mind — a question, something you're wre
 
 After your first conversation, look just above the box where you type. You'll see little tags that say **"Mentor remembers:"**. Those are pieces of past chats the mentor is keeping in mind, so the conversation builds on what you've already shared. You don't have to start from zero every time.
 
-### 3. Arc
+### 3. Prayer
+
+Your prayer life, kept honestly. Three tabs:
+
+- **My prayers** — write down something you're carrying ("a petition"). You
+  choose who sees it: just you, a few friends you name, or the whole cohort.
+  Friends you've shared with can tap **"Pray with them"**, and you'll see
+  "2 praying with you" on the card. When something happens, you record it:
+  answered, answered in part, not as asked, or "the asking changed." You
+  write one or two sentences about what actually happened — the testimony.
+- **Words** — if someone speaks an encouragement or a sense-of-direction over
+  you (a "word"), it lives here while three trusted people weigh it. If two of
+  the three confirm it, it's marked **Confirmed**, and later you record what
+  came of it.
+- **To weigh** — words where *you* are one of the three weighers. Read it,
+  add a note if you want, and press Confirm, Refine, or Do not confirm.
+
+Nothing here is graded. It's witnessed. Over a year you end up with a real
+record: what you asked, who carried it with you, and what happened.
+
+### 4. Arc
 
 Your formation journey, week by week. Each week is a card with:
 
@@ -50,6 +70,11 @@ Three places to go, listed across the top:
 ### 1. Cohort
 
 Your whole class on one screen. A simple chart shows how everyone is trending together. A short list at the side highlights anyone you should look at first.
+
+Below the chart there's a **Prayer rhythm** line — how many petitions and
+words your students are bringing and weighing. You see *counts only*, never
+the content: what a student wrote stays with the people they entrusted it to.
+A small toggle lets you set the cohort's tradition (Catholic or Charismatic).
 
 This is the page to open with your morning coffee.
 
