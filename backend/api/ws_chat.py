@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from backend.services.ai_pipeline import handle_chat_ws
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -25,7 +28,11 @@ async def websocket_chat(websocket: WebSocket) -> None:
                     else:
                         await websocket.send_json({"chunk": item})
                 await websocket.send_json({"done": True})
-            except Exception as exc:
-                await websocket.send_json({"error": f"pipeline error: {exc}"})
+            except Exception:
+                # Log the real cause server-side; never echo provider error
+                # text (which can embed redacted key fragments / internal
+                # hostnames) to the client.
+                logger.exception("chat pipeline error for student_id=%s", student_id)
+                await websocket.send_json({"error": "The mentor is unavailable right now. Try again in a moment."})
     except WebSocketDisconnect:
         return

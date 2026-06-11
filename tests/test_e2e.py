@@ -1,6 +1,7 @@
 import os
 import socket
 import subprocess
+import sys
 import time
 
 import pytest
@@ -22,8 +23,9 @@ def live_app():
         "LLM_FAKE_RESPONSE": "Peace be with you on this formation journey.",
     }
     env.pop("REDIS_URL", None)
+    env.pop("KC_DEMO_SEED", None)
     process = subprocess.Popen(
-        ["python", "-m", "uvicorn", "backend.app:app", "--host", "127.0.0.1", "--port", str(port)],
+        [sys.executable, "-m", "uvicorn", "backend.app:app", "--host", "127.0.0.1", "--port", str(port)],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,

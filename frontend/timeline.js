@@ -123,7 +123,7 @@ function buildWeekCard(week, idxFromMostRecent, profile, isFirst) {
   return card;
 }
 
-function init() {
+async function init() {
   const ls = safeLs();
   const studentId = ls?.getItem("kc-student-id") ?? "stu-marcus-r";
   const student = findStudent(studentId);
@@ -136,7 +136,7 @@ function init() {
     return;
   }
 
-  const profile = getProfile(studentId);
+  const profile = await getProfile(studentId);
   const history = profile.risk_history ?? [];
 
   if (history.length < 1) {

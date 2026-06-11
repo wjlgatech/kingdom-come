@@ -1,6 +1,6 @@
 [project]
 name = "seminary-formation-platform"
-version = "0.7.0"
+version = "0.8.0"
 description = "V7 backend for predictive formation, adaptive curriculum, outcomes, and class orchestration."
 requires-python = ">=3.11"
 dependencies = [
@@ -27,6 +27,11 @@ mcp = [
     "httpx>=0.27",
     "mcp>=1.0",
     "websockets>=12",
+]
+# Container/hosted deployments with no external Redis: realtime.py falls
+# back to fakeredis when REDIS_URL is unset, so the image must ship it.
+standalone = [
+    "fakeredis>=2.20",
 ]
 
 [project.scripts]

@@ -90,7 +90,10 @@ def test_ws_pipeline_error_is_surfaced_as_json(monkeypatch):
         msg = ws.receive_json()
 
     assert "error" in msg
-    assert "simulated upstream failure" in msg["error"]
+    # The client gets a safe, generic message — provider error text (which can
+    # embed redacted key fragments / internal hostnames) must not leak.
+    assert "simulated upstream failure" not in msg["error"]
+    assert "unavailable" in msg["error"].lower()
 
 
 def test_ws_emits_memory_envelope_before_chunks():

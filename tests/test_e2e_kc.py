@@ -13,6 +13,7 @@ All assertions use `wait_for_function` against actual DOM content. Never
 import os
 import socket
 import subprocess
+import sys
 import time
 
 import pytest
@@ -34,8 +35,9 @@ def live_app():
         "LLM_FAKE_RESPONSE": "Walk gently into this week.",
     }
     env.pop("REDIS_URL", None)
+    env.pop("KC_DEMO_SEED", None)  # tests assert on empty ledgers
     process = subprocess.Popen(
-        ["python", "-m", "uvicorn", "backend.app:app", "--host", "127.0.0.1", "--port", str(port)],
+        [sys.executable, "-m", "uvicorn", "backend.app:app", "--host", "127.0.0.1", "--port", str(port)],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -368,3 +370,95 @@ def test_e2e_invalid_student_id_renders_not_found(live_app):
             browser.close()
     except Error as exc:
         pytest.fail(f"Playwright not-found flow failed: {exc}")
+
+
+def test_e2e_prayer_submit_petition_then_mark_answered(live_app):
+    """Prayer ledger story: Marcus brings a petition, then records how it
+    was answered — petition card, status pill, and testimony all render."""
+    try:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch()
+            page = browser.new_page(viewport={"width": 1440, "height": 1000})
+            _seed_role(page, "seminarian", live_app)
+            page.goto(f"{live_app}/me/prayer", wait_until="networkidle")
+
+            # Empty ledger shows the witnessed-not-graded empty state.
+            page.wait_for_function(
+                "() => document.querySelector('[data-testid=\"prayer-empty\"]') !== null"
+            )
+
+            # Bring a petition.
+            page.get_by_test_id("prayer-new-petition").click()
+            page.fill("#petition-text", "Steadiness for Thursday's homily practicum.")
+            page.get_by_test_id("prayer-modal-save").click()
+            page.wait_for_function(
+                "() => [...document.querySelectorAll('[data-testid=\"prayer-card\"] .ledger-text')]"
+                ".some((el) => el.textContent.includes('homily practicum'))"
+            )
+
+            # Mark it answered with a testimony.
+            page.get_by_test_id("prayer-mark-answered").click()
+            page.fill("#answer-testimony", "Preached without notes. Grace held.")
+            page.get_by_test_id("prayer-modal-save").click()
+            page.wait_for_function(
+                "() => [...document.querySelectorAll('[data-testid=\"prayer-testimony\"]')]"
+                ".some((el) => el.textContent.includes('Grace held'))"
+            )
+
+            # Track record line reflects the resolved petition.
+            page.wait_for_function(
+                "() => /1 answered/.test(document.querySelector('[data-testid=\"prayer-track-record\"]')?.textContent ?? '')"
+            )
+            browser.close()
+    except Error as exc:
+        pytest.fail(f"Playwright prayer ledger flow failed: {exc}")
+
+
+def test_e2e_prayer_weigh_queue_clears_after_judgment(live_app):
+    """Prophecy story: a word where Marcus sits on the weighing council
+    appears under 'To weigh' and leaves the queue once he judges it."""
+    import json
+    import urllib.request
+
+    word = {
+        "speaker_id": "stu-grace-w",
+        "addressed_to": "stu-anna-t",
+        "word": "The catechesis you said yes to is the first room of many.",
+        "weigher_ids": ["stu-marcus-r", "stu-luca-b", "fd-theresa"],
+    }
+    req = urllib.request.Request(
+        f"{live_app}/api/prophecies",
+        data=json.dumps(word).encode(),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(req) as resp:
+        assert resp.status == 200
+
+    try:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch()
+            page = browser.new_page(viewport={"width": 1440, "height": 1000})
+            _seed_role(page, "seminarian", live_app)
+            page.goto(f"{live_app}/me/prayer", wait_until="networkidle")
+
+            # Badge shows at least one word awaiting his discernment.
+            page.wait_for_function(
+                "() => Number(document.querySelector('[data-testid=\"weigh-count\"]')?.textContent ?? '0') >= 1"
+            )
+            page.get_by_test_id("prayer-tab-weigh").click()
+            page.wait_for_function(
+                "() => [...document.querySelectorAll('[data-testid=\"weigh-card\"] .ledger-text')]"
+                ".some((el) => el.textContent.includes('first room of many'))"
+            )
+
+            page.fill("[data-testid='weigh-card'] textarea", "Matches the yes she already gave.")
+            page.get_by_test_id("weigh-confirm").click()
+
+            # The judged word leaves Marcus's queue.
+            page.wait_for_function(
+                "() => document.querySelector('[data-testid=\"weigh-empty\"]') !== null"
+            )
+            browser.close()
+    except Error as exc:
+        pytest.fail(f"Playwright weighing flow failed: {exc}")

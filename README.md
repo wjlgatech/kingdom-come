@@ -44,6 +44,16 @@ The OpenAPI docs are available at `http://127.0.0.1:8000/docs`.
 
 ## Quickstart
 
+One command — installs on first run, picks a free LLM backend automatically
+(NVIDIA NIM key if found → local Ollama → scripted fallback), seeds the demo,
+and serves at `http://127.0.0.1:8000`:
+
+```bash
+./run.sh
+```
+
+For development (tests, Playwright):
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
@@ -92,6 +102,21 @@ answered? was this prophecy confirmed by 2-of-3 weighers? was it ultimately
 fulfilled? Read [`docs/PRAYER.md`](docs/PRAYER.md) for the full data model,
 the 1 Cor 14:29 weighing rule, and the visibility / track-record stats.
 
+In the app: seminarians work the ledgers at `/me/prayer` (petitions,
+intercession, weighing queue, fulfillment); directors see a counts-only
+prayer rhythm on `/cohort` plus the cohort tradition policy toggle.
+Set `KC_DEMO_SEED=1` to start with a lived-in demo week.
+
+## Deploy it
+
+The repo is deploy-ready: a verified `Dockerfile`, `docker-compose.yml`
+(demo mode out of the box), and blueprints for Render (`render.yaml`) and
+Fly.io (`fly.toml`). See [`docs/DEPLOY.md`](docs/DEPLOY.md).
+
+```bash
+docker compose up --build   # → http://127.0.0.1:8000, seeded demo
+```
+
 ## For agents (Claude Code, Codex, OpenCode, …)
 
 Kingdom Come ships an MCP server that wraps the API as 20 tools — formation
@@ -106,10 +131,12 @@ uvicorn backend.app:app --reload      # KC API on :8000
 python -m mcp_server.server           # MCP server over stdio
 ```
 
-Wiring snippets for Claude Code, Codex, and other harnesses are in
+Wiring snippets for Claude Code, Codex, Hermes, and other harnesses are in
 [`docs/AGENTS.md`](docs/AGENTS.md). A Claude Code plugin manifest at
 [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) registers the
-server automatically.
+server automatically, and three journey skills in [`skills/`](skills) —
+`morning-check-in`, `cohort-triage`, `prayer-ledger` — give agents the same
+role-shaped experience the webapp gives Marcus and Sister Theresa.
 
 ## Project Structure
 
@@ -117,9 +144,10 @@ server automatically.
 backend/        FastAPI app, database wiring, models, domain services
 frontend/      Static product UI served by FastAPI
 mcp_server/    MCP server wrapping the API for agent harnesses
+skills/        Agent journey skills (webapp-parity playbooks over MCP)
 .claude-plugin/ Claude Code plugin manifest
 tests/         Unit, API, static UI, and browser E2E tests
-docs/          Feature notes, architecture, and implementation plans
+docs/          Feature notes, architecture, deployment, and plans
 ```
 
 ## Test Matrix
@@ -132,6 +160,21 @@ python -m pytest
 Coverage includes service logic, API contracts, static asset serving, and a real Chromium E2E flow through the four core workbench workflows.
 
 ## Configuration
+
+The mentor chat runs on a **fallback chain** so it survives free-tier
+throttles and outages. Tiers are tried in order; a tier joins the chain when
+its env var is present:
+
+| Tier | Env var | Default model |
+|------|---------|---------------|
+| 0. Scripted fake (tests/offline) | `LLM_FAKE_RESPONSE` — beats everything | — |
+| 1. NVIDIA NIM (**free**, build.nvidia.com, ~40 req/min) | `NVIDIA_API_KEY` | `openai/gpt-oss-120b` |
+| 2. Local Ollama (always wired; skipped when not running) | `OLLAMA_MODEL` / `OLLAMA_BASE_URL` optional | `qwen2.5:7b` |
+| 3. OpenRouter | `OPENROUTER_API_KEY` | `openai/gpt-5-mini` |
+| 4. OpenAI | `OPENAI_API_KEY` | `gpt-4o-mini` |
+
+`LLM_MODEL` overrides the primary tier's model. Without an OpenAI key,
+embeddings use a deterministic fake — fine for demos.
 
 The database defaults to `sqlite:///./formation.db`. Override it with:
 

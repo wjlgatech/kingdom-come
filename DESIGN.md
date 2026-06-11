@@ -207,6 +207,18 @@ The reason is the load-bearing element. "Marcus hasn't reflected in 9 days — a
 
 For long-form surfaces (formation arc, weekly reflection). 720px max-width, Source Serif 4 body, Fraunces lead paragraph. Drop-cap optional on the first letter of the first paragraph for editorial moments.
 
+### Ledger card (`/me/prayer`)
+
+Petition or prophetic word as the typographic anchor (Source Serif 4 `--text-lg`), status pill top-right, Geist `--text-xs` meta row (date · visibility · "2 praying with you" · scripture in italic). Testimonies and refine-notes render as a `blockquote` with a 2px `--hairline` left rule, italic, `--ink-muted` — quoted speech, not UI chrome.
+
+### Tradition toggle (`/cohort`)
+
+Two-option segmented control in a `--radius-pill` hairline capsule; the active option fills with `--accent` / `--accent-ink`. Geist `--text-xs` 500. Informational policy, not a primary action — it sits in the section header, not the page header.
+
+### Tab bar (shared)
+
+The student-profile tab idiom (Geist `--text-sm`, `--ink-muted` default, `--ink` + 2px `--accent` underline active, full ARIA tab pattern with arrow-key navigation) is also the prayer surface's tab bar. Reuse it for any future tabbed surface; don't invent a second tab style.
+
 ---
 
 ## Accessibility Floor
@@ -246,6 +258,8 @@ For long-form surfaces (formation arc, weekly reflection). 720px max-width, Sour
 | 2026-05-04 | Fraunces + Source Serif 4 + Geist | Editorial register; avoid Inter/Roboto overuse; serif body is the deliberate risk. |
 | 2026-05-04 | Liturgical rose `#7C2D3A` as accent | Recognizable to formation context; pairs with cream; can be retheme'd per institution. |
 | 2026-05-04 | Status labels (Thriving / Steady / Needs check-in / At risk) replace numeric scores | Direct port of REC-2; the reasons array gets rendered in plain English alongside. |
+| 2026-06-10 | Prayer/prophecy statuses reuse the four status color pairs with pastoral labels | `rejected` renders "Not confirmed" (rose), `refined` "Refine & re-speak" (amber), `answered_yes` "Answered" (verdant). No new colors; the existing semantic pairs carry the meaning. |
+| 2026-06-10 | Ledger card + tradition toggle promoted to primitives | Shipped with `/me/prayer` and the `/cohort` rhythm section; specs above. |
 
 ---
 

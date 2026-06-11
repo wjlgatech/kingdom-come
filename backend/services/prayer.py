@@ -460,6 +460,84 @@ def _resolve_prophecy_status(p: Prophecy) -> ProphecyStatus:
     return "weighing"
 
 
+# ---------- demo seed ----------
+
+def seed_demo() -> None:
+    """Populate both ledgers with a lived-in demo week for the fixture cohort.
+
+    Opt-in only (the app calls this when KC_DEMO_SEED=1) so tests and fresh
+    API consumers always start from empty ledgers. Idempotent: a non-empty
+    prayer ledger means a seed (or real data) is already present.
+    """
+    if _state["prayers"] or _state["prophecies"]:
+        return
+
+    p1 = submit_prayer(
+        student_id="stu-marcus-r",
+        petition="Wisdom for the Mission Theology essay — and honesty about why it scares me.",
+        visibility="small_group",
+        recipient_ids=["stu-luca-b", "stu-grace-w"],
+        scripture="James 1:5",
+    )
+    add_intercession(p1.id, "stu-luca-b", "Praying at lauds this week.")
+    add_intercession(p1.id, "stu-grace-w", "With you. Same essay, same fear.")
+
+    p2 = submit_prayer(
+        student_id="stu-marcus-r",
+        petition="Dad's health — the tests come back Thursday.",
+        visibility="private",
+    )
+    watch_prayer(p2.id)
+
+    p3 = submit_prayer(
+        student_id="stu-marcus-r",
+        petition="Courage to lead morning prayer in front of the cohort.",
+        visibility="cohort",
+        scripture="Joshua 1:9",
+    )
+    mark_answered(
+        p3.id,
+        status="answered_yes",
+        testimony="Led it twice this week. Hands steady the second time.",
+        witnesses=["stu-luca-b"],
+    )
+
+    submit_prayer(
+        student_id="stu-sarah-k",
+        petition="Clarity about whether I'm here for the right reasons.",
+        visibility="small_group",
+        recipient_ids=["stu-marcus-r", "stu-isabel-m"],
+    )
+
+    # A word over Marcus, confirmed 2-of-3, fulfillment still open for him to record.
+    ph1 = submit_prophecy(
+        speaker_id="stu-luca-b",
+        addressed_to="stu-marcus-r",
+        word="A season of speaking is opening for you — the fear of the lectern will not follow you into it.",
+        weigher_ids=["stu-grace-w", "stu-anna-t", "fd-theresa"],
+    )
+    weigh_prophecy(ph1.id, weigher_id="stu-grace-w", judgment="confirm", notes="Matches what we saw at morning prayer.")
+    weigh_prophecy(ph1.id, weigher_id="fd-theresa", judgment="confirm", notes="Consistent with his formation arc.")
+
+    # A word awaiting Marcus's discernment (he is on the weighing council).
+    submit_prophecy(
+        speaker_id="stu-grace-w",
+        addressed_to="stu-anna-t",
+        word="The catechesis you said yes to is the first of many rooms you will teach in.",
+        weigher_ids=["stu-marcus-r", "stu-luca-b", "fd-theresa"],
+    )
+
+    # A word from Marcus sent back for refinement — track records show texture, not just wins.
+    ph3 = submit_prophecy(
+        speaker_id="stu-marcus-r",
+        addressed_to="stu-david-o",
+        word="Your father's illness is not the end of your call but the soil of it.",
+        weigher_ids=["stu-luca-b", "stu-grace-w", "fd-theresa"],
+    )
+    weigh_prophecy(ph3.id, weigher_id="fd-theresa", judgment="refine", notes="True in direction, too heavy in phrasing. Re-speak it gently.")
+    weigh_prophecy(ph3.id, weigher_id="stu-luca-b", judgment="confirm")
+
+
 # ---------- serialization ----------
 
 def to_dict(obj: Any) -> dict[str, Any]:

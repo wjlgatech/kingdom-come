@@ -95,6 +95,22 @@ PUT    /api/cohorts/{cohort_id}/policy
 
 The prayer/prophecy ledgers are exposed as 11 MCP tools so any agent harness can submit, weigh, mark answered, record fulfillment, and pull track records. Tool names mirror the API: `submit_prayer_request`, `list_prayer_requests`, `mark_prayer_answered`, `add_intercession`, `submit_prophecy`, `weigh_prophecy`, `record_prophecy_fulfillment`, `list_prophecies`, `get_prayer_track_record`, `get_cohort_prayer_rhythm`, `set_cohort_tradition`. See [`AGENTS.md`](AGENTS.md) for wiring.
 
+## In the app
+
+- **Seminarian (`/me/prayer`)** — three tabs: *My prayers* (bring a petition
+  with visibility + optional scripture; watch; mark answered with a structured
+  status + testimony; peer petitions appear under "Carried together" with a
+  one-click "Pray with them" intercession), *Words* (words spoken by or over
+  you, weighing progress, fulfillment recording on confirmed words), and
+  *To weigh* (your 1 Cor 14:29 queue with Confirm / Refine / Do not confirm).
+  Statuses render with pastoral labels — `rejected` shows as "Not confirmed",
+  `refined` as "Refine & re-speak" — never raw enums.
+- **Director (`/cohort`)** — a counts-only "Prayer rhythm" line plus the
+  tradition policy toggle. Student profiles carry a counts-only prayer line.
+  Content never crosses the visibility boundary into the director view.
+- **Demo data** — `KC_DEMO_SEED=1` seeds both ledgers with an idempotent
+  demo week (see `prayer.seed_demo()`).
+
 ## Persistence note
 
 The current implementation keeps state in-process (matches the project's pattern; see `vector_memory._store`). Tests must call `prayer.reset()` between cases. Real persistence (SQLAlchemy-backed) is the natural next step — the dataclass shapes in `backend/services/prayer.py` map cleanly onto `MinistryOutcome`-style models.
