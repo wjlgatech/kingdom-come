@@ -1,0 +1,113 @@
+/* The Copilot door — a quiet corner trigger + a paper slide-over panel.
+   Editorial Pastoral: no glassmorphism, no glow; hairlines and serif. */
+
+.copilot-trigger {
+  position: fixed;
+  right: var(--space-24);
+  bottom: var(--space-24);
+  z-index: 40;
+  font-family: var(--sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: var(--space-12) var(--space-24);
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+.copilot-trigger em { font-style: normal; }
+.copilot-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.copilot-panel {
+  position: fixed;
+  right: var(--space-24);
+  bottom: calc(var(--space-24) + 56px);
+  z-index: 41;
+  width: min(420px, calc(100vw - 2 * var(--space-16)));
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-24);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+}
+.copilot-head { display: flex; align-items: baseline; justify-content: space-between; }
+.copilot-title {
+  font-family: var(--serif-display);
+  font-weight: 400;
+  font-size: var(--text-xl);
+  margin: 0 0 var(--space-8);
+}
+.copilot-title em { font-style: normal; color: var(--accent); }
+.copilot-note {
+  font-family: var(--sans);
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+  margin: 0 0 var(--space-16);
+}
+.copilot-starters { display: flex; flex-direction: column; gap: var(--space-8); margin-bottom: var(--space-16); }
+.copilot-starter {
+  font-family: var(--serif-body);
+  font-size: var(--text-sm);
+  font-style: italic;
+  text-align: left;
+  color: var(--ink-muted);
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: var(--space-8) var(--space-12);
+  cursor: pointer;
+}
+.copilot-starter:hover { color: var(--ink); border-color: var(--ink-muted); }
+.copilot-form { display: flex; gap: var(--space-8); margin-bottom: var(--space-16); }
+.copilot-form input {
+  flex: 1;
+  font-family: var(--serif-body);
+  font-size: var(--text-base);
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: var(--space-8) var(--space-12);
+}
+.copilot-form input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+.copilot-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+  margin-bottom: var(--space-12);
+}
+.copilot-pills .label {
+  font-family: var(--sans);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+}
+.copilot-pill {
+  font-family: var(--sans);
+  font-size: var(--text-xs);
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: var(--radius-pill);
+  padding: 2px 10px;
+}
+.copilot-answer {
+  font-family: var(--serif-body);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+}
+.copilot-answer[data-state="error"] { color: var(--accent); }
+.copilot-answer:empty { display: none; }
+
+@media (max-width: 640px) {
+  /* Clear the bottom thumb-nav (B3). */
+  .copilot-trigger { bottom: calc(56px + env(safe-area-inset-bottom) + var(--space-16)); }
+  .copilot-panel { bottom: calc(112px + env(safe-area-inset-bottom)); }
+}

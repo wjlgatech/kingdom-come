@@ -5,6 +5,42 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **The Copilot door (`Ask ✦`)** — an on-page agent on `/me`, `/cohort`, and
+  `/cohort/triage` (agentic-portfolio pattern): ask a question, and the
+  answer is composed from the app's *own live tools*, with "Consulted:"
+  pills showing exactly what was read. Gather-then-ground architecture
+  (`backend/services/copilot.py` + `/ws/copilot`, same frame contract family
+  as `/ws/chat`: context → chunks → done): every tool in the asker's role
+  scope runs in-process, then one completion streams through the mentor's
+  survival chain — and with **no model attached, a deterministic grounded
+  digest answers with true numbers** (keyless demos stay functional).
+  Role-scoped privacy by construction: the director scope is
+  names/statuses/counts and can never reach ledger content; the seminarian
+  scope is the asker's own record only (`tests/test_copilot.py` enforces
+  both). *Why:* the northstar — agents as another door into the same room —
+  now includes the room itself.
+
+- **Voice input on the mentor chat and the Copilot** — tap the mic, speak,
+  tap again; the browser records (MediaRecorder) and one POST to
+  `/api/voice/transcribe` returns the text (same stack as dreammaketrue's
+  `/voice`). Transcription chain in `backend/services/stt.py`:
+  `VOICE_FAKE_TEXT` (tests) → faster-whisper (`.[voice]` extra, local CPU) →
+  OpenAI Whisper API → unavailable — and `GET /api/voice/health` lets the UI
+  hide the mic when nothing can transcribe. Silence diagnostics ported from
+  the reference (opus ≈1KB/s silence ratio → "the browser picked the wrong
+  mic"). No audio is ever persisted or logged — this app carries prayer.
+
+### Fixed
+
+- **E2E server freeze at ~18 tests** — the `live_app` fixtures piped uvicorn's
+  stdout and never drained it, so the access log filled the 64KB pipe buffer
+  and the blocked log write froze the whole server (`Page.goto` timeouts that
+  looked like order-dependent flake). Both fixtures now use `DEVNULL`, matching
+  `tests/test_a11y.py`; diagnosed by curling the test server from outside
+  during the hang (reset → refused = server-side, not browser-side).
+
 ## [0.9.0] - 2026-07-03
 
 ### Added

@@ -1,6 +1,7 @@
 import { COHORT } from "/static/cohort_data.js";
 import { STATUS, statusFromRisk, statusLabel, statusClass, reasonsToSentence, avatarBackground, avatarInitials } from "/static/status.js";
 import { scoreStudent } from "/static/cohort_risk.js";
+import { mountCopilot } from "/static/copilot.js";
 
 const STATUS_PRIORITY = { [STATUS.AT_RISK]: 0, [STATUS.CHECK_IN]: 1, [STATUS.STEADY]: 2, [STATUS.THRIVING]: 3 };
 
@@ -100,3 +101,5 @@ async function init() {
 }
 
 init();
+
+mountCopilot();

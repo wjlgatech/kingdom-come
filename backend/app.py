@@ -9,10 +9,12 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
 from backend.api.ws_chat import router as ws_chat_router
+from backend.api.ws_copilot import router as ws_copilot_router
 from backend.fixtures import cohort as cohort_fixtures
 from backend.services import journey as journey_service
 from backend.services import prayer as prayer_service
 from backend.services import pulse as pulse_service
+from backend.services import stt as stt_service
 from backend.services import vector_memory
 from backend.services.curriculum import recommend_content
 from backend.services.orchestration import class_orchestrator
@@ -31,6 +33,7 @@ if not FRONTEND_DIR.is_dir():
 
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 app.include_router(ws_chat_router)
+app.include_router(ws_copilot_router)
 
 # Opt-in write-through persistence for the ledgers (KC_PERSIST=1): creates
 # the tables (init_db stays opt-in) and replays persisted records into the
@@ -271,6 +274,30 @@ async def import_cohort(cohort_id: str, request: Request) -> dict[str, object]:
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from None
     return {"cohort_id": cohort_id, "imported": imported}
+
+
+# Voice input (dreammaketrue's /voice stack: MediaRecorder → one POST →
+# whisper). Raw-body upload, no multipart, so no extra dependency; the
+# health probe lets the UI hide the mic when nothing can transcribe.
+
+
+@app.get("/api/voice/health")
+def voice_health() -> dict[str, object]:
+    engine = stt_service.available()
+    return {"available": engine is not None, "engine": engine}
+
+
+@app.post("/api/voice/transcribe")
+async def voice_transcribe(request: Request) -> dict[str, str]:
+    if stt_service.available() is None:
+        raise HTTPException(status_code=503, detail="no speech-to-text backend available")
+    audio = await request.body()
+    if len(audio) < 2048:
+        # Opus compresses silence to ~1KB/s; header-only blobs mean the mic
+        # never heard anything worth sending to a model.
+        raise HTTPException(status_code=422, detail="audio too short — tap, speak a sentence, tap again")
+    text = await stt_service.transcribe(audio)
+    return {"text": text}
 
 
 # Mentor memory — user-controlled, ChatGPT transparency pattern (REC-3):

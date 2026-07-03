@@ -1,6 +1,7 @@
 import { COHORT, DEMO_DIRECTOR } from "/static/cohort_data.js";
 import { STATUS, statusFromRisk, statusLabel, statusClass, reasonsToSentence, avatarBackground, avatarInitials } from "/static/status.js";
 import { mountTour } from "/static/tour.js";
+import { mountCopilot } from "/static/copilot.js";
 
 // CSV roster import (B4): pick a file, POST it, reload so every surface
 // (top-level-awaited COHORT) picks up the new roster.
@@ -343,3 +344,5 @@ renderPrayerRhythm();
 initTraditionToggle();
 renderPulseNote();
 renderJourneyLine();
+
+mountCopilot();

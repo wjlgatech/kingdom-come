@@ -205,6 +205,14 @@ function openMemoryModal() {
 
 document.querySelector("[data-testid='chat-manage-memory']")?.addEventListener("click", openMemoryModal);
 
+// Voice input (dreammaketrue /voice stack): mic fills the textarea.
+import("/static/voice.js").then(({ mountVoiceInput }) =>
+  mountVoiceInput(messageInput, {
+    onText: () => sendMessage(),
+    onNote: (text) => showError(text),
+  }),
+);
+
 // Auto-focus input and open the socket on load, so the status pill reads
 // "connected" instead of sitting on the static "disconnected" text until
 // the first send (REC-3: the thread should feel alive on arrival).

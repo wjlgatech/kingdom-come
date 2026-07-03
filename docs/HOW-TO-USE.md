@@ -148,6 +148,29 @@ This is one of the most useful things the app does. When you hear that a student
 
 That outcome shows up at the top of their record. Over a year, you build up a real story of who this person is becoming — not just their grades.
 
+## Ask the app anything (the ✦ button)
+
+Bottom-right of your home screen there's a small **Ask ✦** button — for
+students and teachers both. Click it, type a question ("Who needs me this
+week?", "How am I doing?"), or tap one of the suggestions. The app reads its
+own live data — the same statuses and counts you see on screen — and answers
+in a couple of sentences. Small tags labeled **Consulted** show you exactly
+which sources it read.
+
+Two honest limits: a teacher's Ask can see *counts and statuses only* (never
+anyone's prayers or reflections), and a student's Ask sees only their own
+record.
+
+## Speak instead of typing
+
+Next to the chat box (and inside Ask ✦) there's a small **🎙** button when the
+server can transcribe speech. Tap it, say your reflection or question out
+loud, tap again — your words appear as text. Your voice is turned into text
+and immediately thrown away; the recording is never saved anywhere.
+
+If you don't see the mic, the server has no transcription engine set up
+(it needs the `voice` extra or an OpenAI key) — typing works exactly the same.
+
 ## Two clicks, that's it
 
 If you remember nothing else: most things in Kingdom Come are two clicks away. Open the page, do the thing. No settings to learn, no menus to dig through.

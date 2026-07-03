@@ -26,9 +26,10 @@ def live_app():
     env.pop("KC_DEMO_SEED", None)
     process = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "backend.app:app", "--host", "127.0.0.1", "--port", str(port)],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
+        # DEVNULL, never PIPE — an undrained pipe freezes uvicorn once the
+        # access log fills the buffer (see test_e2e_kc.live_app).
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
         env=env,
     )
     deadline = time.time() + 10
@@ -38,9 +39,8 @@ def live_app():
                 break
         time.sleep(0.1)
     else:
-        output = process.stdout.read() if process.stdout else ""
         process.terminate()
-        raise RuntimeError(f"Uvicorn did not start: {output}")
+        raise RuntimeError("Uvicorn did not start (run it by hand to see why)")
 
     yield f"http://127.0.0.1:{port}"
 
