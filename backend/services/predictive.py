@@ -1,4 +1,6 @@
-def dropout_risk(student):
+from typing import Any
+
+def dropout_risk(student: dict[str, Any]) -> dict[str, Any]:
     engagement = student.get('engagement', 1.0)
     reflection_count = student.get('reflection_count', 2)
 

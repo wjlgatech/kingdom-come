@@ -1,4 +1,6 @@
-def recommend_content(student):
+from typing import Any
+
+def recommend_content(student: dict[str, Any]) -> list[str]:
     calling = student.get('calling') or []
     completed_content = set(student.get('completed_content') or [])
 

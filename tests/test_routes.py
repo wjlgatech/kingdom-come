@@ -72,6 +72,28 @@ def test_timeline_returns_arc_surface():
     assert "data-testid=\"timeline-headline\"" in response.text
 
 
+def test_pwa_shell_is_wired():
+    """B3: manifest + icon are referenced by the base template and the
+    service worker serves from the root so its scope covers the whole app."""
+    body = client.get("/me").text
+    assert "/static/manifest.json" in body
+    assert "/static/icon.svg" in body
+    assert "serviceWorker" in body
+
+    sw = client.get("/sw.js")
+    assert sw.status_code == 200
+    assert "javascript" in sw.headers["content-type"]
+    assert client.get("/static/manifest.json").status_code == 200
+
+
+def test_year_returns_formation_year_surface():
+    response = client.get("/me/year")
+    assert response.status_code == 200
+    assert "data-testid=\"year-headline\"" in response.text
+    assert "data-testid=\"year-numbers\"" in response.text
+    assert "data-testid=\"year-lines\"" in response.text
+
+
 def test_cohort_overview_returns_overview_surface():
     response = client.get("/cohort")
     assert response.status_code == 200
@@ -130,6 +152,8 @@ def test_per_page_assets_are_referenced():
         ("/me/prayer", "prayer.js"),
         ("/me/timeline", "timeline.css"),
         ("/me/timeline", "timeline.js"),
+        ("/me/year", "year.css"),
+        ("/me/year", "year.js"),
         ("/cohort", "cohort_overview.css"),
         ("/cohort", "cohort_overview.js"),
         ("/cohort/triage", "triage.css"),

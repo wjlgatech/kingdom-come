@@ -37,15 +37,27 @@ Other knobs:
 | `REDIS_URL` | unset → in-process `fakeredis` | Real Redis for activity events. |
 | `DATABASE_URL` | `sqlite:///./formation.db` | SQLAlchemy URL (tables are opt-in via `init_db()`). |
 | `KC_DEMO_SEED` | unset | `1` seeds the prayer + prophecy ledgers with a demo week (idempotent, in-memory). |
+| `KC_PERSIST` | unset | `1` persists the prayer + prophecy ledgers to `DATABASE_URL` (write-through rows, replayed at startup). Run exactly one machine, and give sqlite a volume — a redeploy replaces the container filesystem. |
+| `KC_JOURNEY_START` | 11 days ago | ISO date the shared 40-day journey began (drives the "Day N of 40" lines). |
 | `EMBEDDING_FAKE` | unset | `1` forces fake embeddings even when a key is present. |
 | `LLM_MODEL` | per provider | Override the chat model id (NVIDIA default `openai/gpt-oss-120b`, OpenAI default `gpt-4o-mini`). |
 
-> **State note:** the prayer ledgers, vector memory, and activity events are
-> in-process by design (see `docs/ARCHITECTURE.md`). A redeploy or restart
-> resets them — fine for demos and pilots, and the reason persistence is on
-> the roadmap's "Next" list.
+> **State note:** vector memory and activity events are in-process by design
+> (see `docs/ARCHITECTURE.md`) and reset on redeploy. The prayer + prophecy
+> ledgers reset too **unless** you set `KC_PERSIST=1` (write-through rows in
+> `DATABASE_URL`, replayed at startup) — with sqlite, mount a volume so the
+> DB outlives the container.
 
 ## Docker (verified locally)
+
+A prebuilt image publishes to GHCR on every push to `main`
+(`.github/workflows/publish-image.yml`):
+
+```bash
+docker run -p 8000:8000 ghcr.io/wjlgatech/kingdom-come   # no clone needed
+```
+
+Or build it yourself:
 
 ```bash
 docker build -t kingdom-come .
@@ -62,9 +74,13 @@ docker compose up --build
 
 ## Render
 
-The repo ships a [`render.yaml`](../render.yaml) blueprint:
+One click:
 
-1. Push the repo to GitHub.
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/wjlgatech/kingdom-come)
+
+Or from the dashboard — the repo ships a [`render.yaml`](../render.yaml) blueprint:
+
+1. Push the repo to GitHub (or use the button above on the public repo).
 2. Render dashboard → **New → Blueprint** → pick the repo.
 3. Deploy. The free plan works; `/health` is the health check.
 4. Real mentor: set `OPENAI_API_KEY` in the dashboard and delete the
@@ -72,13 +88,22 @@ The repo ships a [`render.yaml`](../render.yaml) blueprint:
 
 ## Fly.io
 
+The reference demo instance runs here: **https://kingdom-come.fly.dev**
+(demo mode, `auto_stop_machines` — first request after idle takes a few
+seconds while a machine wakes).
+
 The repo ships a [`fly.toml`](../fly.toml):
 
 ```bash
 fly launch --copy-config --no-deploy   # creates the app, keeps our config
-fly deploy
+fly deploy --ha=false                  # ONE machine — see note below
 fly secrets set OPENAI_API_KEY=sk-...  # optional, for the real mentor
 ```
+
+> **Run exactly one machine** (`--ha=false`, or `fly scale count 1` after the
+> fact). The ledgers, vector memory, and events are in-process; two machines
+> means two divergent states behind one hostname — a prayer marked answered
+> on one machine still shows open when the next request lands on the other.
 
 ## Railway / anything that runs a Dockerfile
 

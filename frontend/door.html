@@ -18,7 +18,7 @@
     <div class="door-card-label">For the seminarian</div>
     <div class="door-card-title">I'm in formation.</div>
     <div class="door-card-preview">
-      Today's reflection prompt. <span class="status-pill status-steady" aria-label="example status">Steady</span> · Your next step in mission theology.
+      Today's reflection prompt. <span class="status-pill status-steady" aria-label="example status">Steady</span> · <span data-testid="door-preview-next-step">Your next step in mission theology.</span>
     </div>
     <div class="door-card-arrow" aria-hidden="true">→</div>
   </a>
@@ -27,7 +27,7 @@
     <div class="door-card-label">For the formation director</div>
     <div class="door-card-title">I'm shaping a cohort.</div>
     <div class="door-card-preview">
-      3 students need a check-in this week. Plain-English reasons. One click to schedule.
+      <span data-testid="door-preview-director-count">3 students need a check-in this week.</span> Plain-English reasons. One click to schedule.
     </div>
     <div class="door-card-arrow" aria-hidden="true">→</div>
   </a>
@@ -40,7 +40,8 @@
 
 {% block script %}
 <script type="module">
-  import { DEMO_SEMINARIAN_ID, DEMO_DIRECTOR } from "/static/cohort_data.js";
+  import { COHORT, findStudent, DEMO_SEMINARIAN_ID, DEMO_DIRECTOR } from "/static/cohort_data.js";
+  import { scoreStudent, countFlagged } from "/static/cohort_risk.js";
 
   function safeLs() { try { return window.localStorage; } catch { return null; } }
 
@@ -68,5 +69,35 @@
       window.location.href = card.getAttribute("href");
     });
   });
+
+  // Live previews behind each door (REC-1 refinement): the static copy above
+  // stays as the fallback; these swap in real numbers when the API answers.
+  // Only runs for first-time visitors — returning users were redirected above.
+  if (!existingRole) {
+    (async () => {
+      const scored = await Promise.all(COHORT.map(scoreStudent));
+      const flagged = countFlagged(scored);
+      const countEl = document.querySelector("[data-testid='door-preview-director-count']");
+      if (countEl && scored.some((s) => s.data)) {
+        countEl.textContent = flagged === 0
+          ? "No one needs a check-in this week."
+          : `${flagged} student${flagged === 1 ? "" : "s"} need${flagged === 1 ? "s" : ""} a check-in this week.`;
+      }
+
+      const demo = findStudent(DEMO_SEMINARIAN_ID);
+      if (!demo) return;
+      const res = await fetch("/curriculum/recommendations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ calling: demo.calling, completed_content: [] }),
+      });
+      if (!res.ok) return;
+      const recs = (await res.json()).recommendations ?? [];
+      const stepEl = document.querySelector("[data-testid='door-preview-next-step']");
+      if (stepEl && recs.length > 0) {
+        stepEl.textContent = `Your next step: ${recs[0].replaceAll("_", " ")}.`;
+      }
+    })().catch(() => { /* previews are progressive enhancement */ });
+  }
 </script>
 {% endblock %}

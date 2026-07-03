@@ -10,3 +10,5 @@ output/
 .gstack/
 design-preview.html
 *.egg-info/
+build/
+*.egg-info/

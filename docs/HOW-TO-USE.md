@@ -9,13 +9,21 @@ You'll land on a page with two doors:
 - **"I'm a seminarian"** — pick this if you're a student in training.
 - **"I'm a director"** — pick this if you're a teacher.
 
-Click your door. The app remembers your choice for next time, so you'll go straight to your home screen on future visits.
+Each door gives you a small preview of what's behind it — the student door
+shows your next study step, the teacher door shows how many students need a
+check-in this week.
+
+Click your door. The app remembers your choice for next time, so you'll go
+straight to your home screen on future visits. On your very first visit your
+home screen walks you through itself in three short steps — read them or hit
+Skip; either way it won't ask again.
 
 If you ever want to switch (or you picked the wrong one), look for the **"Switch role"** link in the top right corner.
 
 ## If you're a student
 
-Four places to go, listed across the top of the screen:
+Five places to go, listed across the top of the screen (on a phone they sit
+along the bottom, where your thumb is):
 
 ### 1. Today
 
@@ -33,6 +41,10 @@ A chat window. Type whatever's on your mind — a question, something you're wre
 
 After your first conversation, look just above the box where you type. You'll see little tags that say **"Mentor remembers:"**. Those are pieces of past chats the mentor is keeping in mind, so the conversation builds on what you've already shared. You don't have to start from zero every time.
 
+The memory is yours, not the app's: click **"Manage memory"** to see the full
+list of what the mentor remembers, and hit **Forget** next to anything that
+shouldn't be there. It's gone for good — the mentor won't bring it up again.
+
 ### 3. Prayer
 
 Your prayer life, kept honestly. Three tabs:
@@ -43,6 +55,8 @@ Your prayer life, kept honestly. Three tabs:
   "2 praying with you" on the card. When something happens, you record it:
   answered, answered in part, not as asked, or "the asking changed." You
   write one or two sentences about what actually happened — the testimony.
+  The card then shows the whole journey in one line — when you asked, how
+  many friends carried it with you, and when it was answered.
 - **Words** — if someone speaks an encouragement or a sense-of-direction over
   you (a "word"), it lives here while three trusted people weigh it. If two of
   the three confirm it, it's marked **Confirmed**, and later you record what
@@ -63,6 +77,18 @@ Your formation journey, week by week. Each week is a card with:
 
 Use it to look back and see how far you've come — or to notice patterns ("I always struggle in the third week of a unit").
 
+### 5. Year
+
+Your whole year on one page, laid out like a magazine spread: how many
+reflections you wrote, petitions you brought, prayers answered, outcomes you
+logged — then the actual lines you wrote, and the prayers that were carried
+and answered, with your own testimonies. Nothing here is new data; it's your
+year, assembled so you can see it.
+
+You may also notice a small line under your morning greeting — **"Forty Days
+of Discernment — day 12 of 40"**. The whole cohort walks the same 40 days
+together; the day counter is the same for everyone.
+
 ## If you're a teacher
 
 Three places to go, listed across the top:
@@ -75,6 +101,15 @@ Below the chart there's a **Prayer rhythm** line — how many petitions and
 words your students are bringing and weighing. You see *counts only*, never
 the content: what a student wrote stays with the people they entrusted it to.
 A small toggle lets you set the cohort's tradition (Catholic or Charismatic).
+
+Under the chart's summary you'll sometimes see a short italic note — two or
+three sentences about what the week seems to be asking of you. It's written
+by the same AI as the mentor, from the counts alone (it can't see anyone's
+prayers or reflections, only numbers).
+
+Have your real class list in a spreadsheet? **Import roster (CSV)** at the top
+replaces the demo roster with your own students — the file just needs columns
+`id,name,engagement,reflection_count,calling`.
 
 This is the page to open with your morning coffee.
 

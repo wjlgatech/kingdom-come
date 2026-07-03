@@ -4,6 +4,8 @@
 
 Kingdom Come is an open-source FastAPI platform for seminaries, church networks, and ministry training teams that want to move from scattered spreadsheets to real formation signals. It combines dropout risk detection, adaptive curriculum recommendations, live class orchestration, and ministry outcome tracking in one contributor-friendly project.
 
+**[Try the live demo →](https://kingdom-come.fly.dev)** (seeded demo week, scripted mentor — nothing to install)
+
 [Explore the repo](https://github.com/wjlgatech/kingdom-come) · [Run locally](#quickstart) · [Contribute](#contribute)
 
 ## Start here
@@ -28,8 +30,12 @@ What you get on day one:
 - **Adaptive curriculum paths** based on calling and completed content.
 - **Class orchestration actions** that identify groups needing intervention.
 - **Ministry outcome snapshots** that connect field impact back to formation.
+- **An AI mentor with memory you control** — view and forget what it remembers.
+- **Prayer + prophecy ledgers** with track records that can persist across restarts (`KC_PERSIST=1`).
+- **The Formation Year** (`/me/year`) — a student's whole year assembled as one editorial page.
+- **CSV roster import**, a shared 40-day journey, installable PWA, first-run tours.
 - **A real web workbench** backed by the same JSON API your integrations can call.
-- **Unit, API, and browser E2E tests** so contributors can move with confidence.
+- **Unit, API, browser E2E, and axe-core accessibility tests** so contributors can move with confidence.
 
 ## Product Preview
 
@@ -108,6 +114,25 @@ prayer rhythm on `/cohort` plus the cohort tradition policy toggle.
 Set `KC_DEMO_SEED=1` to start with a lived-in demo week.
 
 ## Deploy it
+
+A hosted demo runs at **https://kingdom-come.fly.dev** (Fly.io, demo mode,
+scales to zero when idle).
+
+One command, no clone (needs [uv](https://docs.astral.sh/uv/)):
+
+```bash
+uvx --from git+https://github.com/wjlgatech/kingdom-come kingdom-come
+```
+
+One click — get your own hosted instance (demo mode, zero secrets needed):
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/wjlgatech/kingdom-come)
+
+Or one command on Fly.io:
+
+```bash
+fly launch --copy-config --now   # uses the shipped fly.toml
+```
 
 The repo is deploy-ready: a verified `Dockerfile`, `docker-compose.yml`
 (demo mode out of the box), and blueprints for Render (`render.yaml`) and

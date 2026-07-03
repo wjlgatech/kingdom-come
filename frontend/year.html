@@ -1,0 +1,51 @@
+{% extends "_base.html" %}
+{% block title %}Formation Year — Kingdom Come{% endblock %}
+{% block stylesheet %}<link rel="stylesheet" href="/static/year.css" />{% endblock %}
+{% block main_class %}year-main{% endblock %}
+{% block main %}
+<script>document.body.dataset.role = "seminarian";</script>
+
+<section class="year-hero">
+  <p class="year-kicker">The Formation Year</p>
+  <h1 class="year-headline" data-testid="year-headline">A year of <em>formation</em>, kept honestly.</h1>
+  <p class="year-sub" data-testid="year-sub">What you reflected, carried, spoke, and did — assembled from your own record.</p>
+</section>
+
+<section class="year-numbers" aria-label="Your year in numbers" data-testid="year-numbers">
+  <div class="year-stat">
+    <span class="year-stat-number" data-testid="year-stat-reflections">–</span>
+    <span class="year-stat-label">reflections written</span>
+  </div>
+  <div class="year-stat">
+    <span class="year-stat-number" data-testid="year-stat-prayers">–</span>
+    <span class="year-stat-label">petitions brought</span>
+  </div>
+  <div class="year-stat">
+    <span class="year-stat-number" data-testid="year-stat-answered">–</span>
+    <span class="year-stat-label">answered</span>
+  </div>
+  <div class="year-stat">
+    <span class="year-stat-number" data-testid="year-stat-outcomes">–</span>
+    <span class="year-stat-label">ministry outcomes</span>
+  </div>
+</section>
+
+<section class="year-section" aria-labelledby="year-lines-h">
+  <h2 class="year-section-label" id="year-lines-h">Lines you wrote</h2>
+  <div class="year-lines" data-testid="year-lines" aria-busy="true" data-skeleton></div>
+</section>
+
+<section class="year-section" aria-labelledby="year-carried-h">
+  <h2 class="year-section-label" id="year-carried-h">Carried and answered</h2>
+  <div class="year-carried" data-testid="year-carried" aria-busy="true" data-skeleton></div>
+</section>
+
+<section class="year-section" aria-labelledby="year-arc-h">
+  <h2 class="year-section-label" id="year-arc-h">The arc of your weeks</h2>
+  <p class="year-arc" data-testid="year-arc"></p>
+</section>
+{% endblock %}
+
+{% block script %}
+<script type="module" src="/static/year.js"></script>
+{% endblock %}

@@ -1,0 +1,29 @@
+# Publish to PyPI on version tags (10X plan A3) so `uvx kingdom-come` works.
+#
+# One-time setup (owner, not automatable from here): create the `kingdom-come`
+# project on PyPI and add this repo as a Trusted Publisher
+# (PyPI → project → Publishing → GitHub: wjlgatech/kingdom-come, this
+# workflow, environment `pypi`). No token secrets needed after that.
+#
+# Until then, the git form already works with no publish at all:
+#   uvx --from git+https://github.com/wjlgatech/kingdom-come kingdom-come
+name: publish-pypi
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install build && python -m build
+      - uses: pypa/gh-action-pypi-publish@release/v1

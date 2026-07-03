@@ -7,6 +7,7 @@
 <section class="me-greeting">
   <h1 class="me-headline">Good morning, <em data-testid="me-name">Marcus</em>.</h1>
   <div class="me-date" data-testid="me-date"></div>
+  <p class="me-journey" data-testid="me-journey-line" hidden></p>
 </section>
 
 <section class="me-cards">
@@ -24,7 +25,7 @@
     <p class="me-card-lead" data-testid="me-status-line">
       <span class="skeleton" style="display: inline-block; width: 200px; height: 1.4em; vertical-align: middle;"></span>
     </p>
-    <button type="button" class="btn btn-ghost inline" data-testid="me-view-arc" disabled title="Coming soon">View full arc →</button>
+    <a href="/me/timeline" class="btn btn-ghost inline" data-testid="me-view-arc">View full arc →</a>
   </article>
 
   <article class="me-card" aria-labelledby="card-path-h">

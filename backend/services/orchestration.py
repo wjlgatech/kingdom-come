@@ -1,4 +1,6 @@
-def class_orchestrator(groups):
+from typing import Any
+
+def class_orchestrator(groups: list[Any]) -> list[dict[str, Any]]:
     actions = []
     for g in groups:
         group_id = g.get("id") if isinstance(g, dict) else None

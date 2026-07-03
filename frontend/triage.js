@@ -1,5 +1,6 @@
 import { COHORT } from "/static/cohort_data.js";
 import { STATUS, statusFromRisk, statusLabel, statusClass, reasonsToSentence, avatarBackground, avatarInitials } from "/static/status.js";
+import { scoreStudent } from "/static/cohort_risk.js";
 
 const STATUS_PRIORITY = { [STATUS.AT_RISK]: 0, [STATUS.CHECK_IN]: 1, [STATUS.STEADY]: 2, [STATUS.THRIVING]: 3 };
 
@@ -7,34 +8,6 @@ function reasonContext(student, reasons) {
   if (!reasons || reasons.length === 0) return {};
   const overrides = student.reason_overrides ?? {};
   return overrides[reasons[0]] ?? {};
-}
-
-async function scoreStudent(student) {
-  try {
-    const res = await fetch("/predictive/dropout-risk", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        engagement: student.engagement,
-        reflection_count: student.reflection_count,
-      }),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    // Apply explicit reason overrides from cohort_data (calling drift, etc.).
-    // Each override key adds 1 point to the score (mirrors backend's reason→score weighting)
-    // and adds the reason to the reasons array if not already there.
-    if (student.reason_overrides) {
-      const extras = Object.keys(student.reason_overrides).filter(
-        (r) => !(data.reasons ?? []).includes(r),
-      );
-      data.reasons = [...(data.reasons ?? []), ...extras];
-      data.score = (data.score ?? 0) + extras.length;
-    }
-    return { student, data };
-  } catch (err) {
-    return { student, data: null, error: String(err) };
-  }
 }
 
 function buildRow(scored) {

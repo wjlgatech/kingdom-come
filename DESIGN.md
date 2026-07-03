@@ -70,7 +70,7 @@ Self-host or load from Google Fonts. Avoid Inter / Roboto / Poppins as primary (
 | `--surface-2` | `#F4EFE6` | Secondary surface (e.g., active nav, hover bg) |
 | `--ink` | `#1B1A18` | Primary text — warm near-black, never `#000` |
 | `--ink-muted` | `#5C564E` | Secondary text, metadata |
-| `--ink-faint` | `#8A8378` | Tertiary text, placeholders |
+| `--ink-faint` | `#736C60` | Tertiary text, placeholders |
 | `--hairline` | `#E8E1D6` | Dividers, borders |
 | `--accent` | `#7C2D3A` | Primary action, at-risk flag — liturgical rose |
 | `--accent-soft` | `#F2DDDF` | Accent background tint (soft hover, alert background) |
@@ -85,7 +85,7 @@ Self-host or load from Google Fonts. Avoid Inter / Roboto / Poppins as primary (
 | `--surface-2` | `#2C2823` | Secondary surface |
 | `--ink` | `#F0EAE0` | Primary text |
 | `--ink-muted` | `#A09686` | Secondary text |
-| `--ink-faint` | `#7A7166` | Tertiary text |
+| `--ink-faint` | `#9A9184` | Tertiary text |
 | `--hairline` | `#3A3530` | Dividers |
 | `--accent` | `#D08FA0` | Lifted dusty rose |
 | `--accent-soft` | `#3A2329` | Accent background tint in dark |
@@ -99,7 +99,7 @@ Always render with a text label — never color-only. Background uses the soft t
 |--------|--------|------|---------|
 | Thriving | `#2F6B43` | `#E1EEE6` | High engagement, active reflection. |
 | Steady | `#5C564E` (= `--ink-muted`) | `#F4EFE6` | Holding pattern, no action needed. |
-| Needs check-in | `#B88A1F` | `#F6ECD2` | Soft alert — engagement softening. |
+| Needs check-in | `#7F5F0D` | `#F6ECD2` | Soft alert — engagement softening. |
 | At risk | `#7C2D3A` (= `--accent`) | `#F2DDDF` | Hard alert — intervene this week. |
 
 Dark mode: strong colors lift ~15% (e.g., Verdant → `#5FA378`), softs become surface-2 tints.

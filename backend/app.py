@@ -1,15 +1,19 @@
 import os
+from typing import Any
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
 from backend.api.ws_chat import router as ws_chat_router
 from backend.fixtures import cohort as cohort_fixtures
+from backend.services import journey as journey_service
 from backend.services import prayer as prayer_service
+from backend.services import pulse as pulse_service
+from backend.services import vector_memory
 from backend.services.curriculum import recommend_content
 from backend.services.orchestration import class_orchestrator
 from backend.services.predictive import dropout_risk
@@ -18,9 +22,25 @@ from backend.services.predictive import dropout_risk
 app = FastAPI(title="Seminary Formation Platform V7", version="0.7.0")
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
+if not FRONTEND_DIR.is_dir():
+    # Installed as a wheel (uvx / pip): the assets ship as the `frontend`
+    # package (see pyproject) instead of a repo-level directory.
+    from importlib.resources import files
+
+    FRONTEND_DIR = Path(str(files("frontend")))
 
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 app.include_router(ws_chat_router)
+
+# Opt-in write-through persistence for the ledgers (KC_PERSIST=1): creates
+# the tables (init_db stays opt-in) and replays persisted records into the
+# in-process state so a restart/redeploy no longer resets them. Must run
+# BEFORE the demo seed — a non-empty reload makes seed_demo a no-op.
+if os.environ.get("KC_PERSIST") == "1":
+    from backend.db.connection import init_db
+
+    init_db()
+    prayer_service.enable_persistence()
 
 # Opt-in demo data for the prayer + prophecy ledgers (hosted demos, local
 # tours). Never seeded by default so tests and API consumers start empty.
@@ -35,6 +55,7 @@ SEMINARIAN_SUBNAV = [
     {"href": "/me/chat", "label": "Mentor", "key": "mentor"},
     {"href": "/me/prayer", "label": "Prayer", "key": "prayer"},
     {"href": "/me/timeline", "label": "Arc", "key": "arc"},
+    {"href": "/me/year", "label": "Year", "key": "year"},
 ]
 DIRECTOR_SUBNAV = [
     {"href": "/cohort", "label": "Cohort", "key": "cohort"},
@@ -70,12 +91,12 @@ class MinistryOutcomeRequest(BaseModel):
 
 
 @app.get("/", include_in_schema=False)
-def landing_page(request: Request):
+def landing_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(request, "door.html", {"subnav": None})
 
 
 @app.get("/me", include_in_schema=False)
-def me_page(request: Request):
+def me_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         request,
         "me.html",
@@ -84,7 +105,7 @@ def me_page(request: Request):
 
 
 @app.get("/me/chat", include_in_schema=False)
-def chat_page(request: Request):
+def chat_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         request,
         "chat.html",
@@ -93,7 +114,7 @@ def chat_page(request: Request):
 
 
 @app.get("/me/prayer", include_in_schema=False)
-def prayer_page(request: Request):
+def prayer_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         request,
         "prayer.html",
@@ -102,7 +123,7 @@ def prayer_page(request: Request):
 
 
 @app.get("/me/timeline", include_in_schema=False)
-def timeline_page(request: Request):
+def timeline_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         request,
         "timeline.html",
@@ -110,8 +131,17 @@ def timeline_page(request: Request):
     )
 
 
+@app.get("/me/year", include_in_schema=False)
+def year_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request,
+        "year.html",
+        {"subnav": _seminarian_subnav("year"), "required_role": "seminarian"},
+    )
+
+
 @app.get("/cohort", include_in_schema=False)
-def cohort_overview_page(request: Request):
+def cohort_overview_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         request,
         "cohort_overview.html",
@@ -120,7 +150,7 @@ def cohort_overview_page(request: Request):
 
 
 @app.get("/cohort/triage", include_in_schema=False)
-def triage_page(request: Request):
+def triage_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         request,
         "cohort_triage.html",
@@ -129,7 +159,7 @@ def triage_page(request: Request):
 
 
 @app.get("/cohort/groups", include_in_schema=False)
-def cohort_groups_page(request: Request):
+def cohort_groups_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         request,
         "cohort_groups.html",
@@ -138,7 +168,7 @@ def cohort_groups_page(request: Request):
 
 
 @app.get("/students/{student_id}", include_in_schema=False)
-def profile_page(request: Request, student_id: str):
+def profile_page(request: Request, student_id: str) -> HTMLResponse:
     return templates.TemplateResponse(
         request,
         "student_profile.html",
@@ -148,6 +178,13 @@ def profile_page(request: Request, student_id: str):
             "student_id": student_id,
         },
     )
+
+
+@app.get("/sw.js", include_in_schema=False)
+def service_worker() -> FileResponse:
+    # Served from the root (not /static) so the worker's scope covers the
+    # whole app — a service worker can only control paths at or below its URL.
+    return FileResponse(FRONTEND_DIR / "sw.js", media_type="text/javascript")
 
 
 @app.get("/admin/workbench", include_in_schema=False)
@@ -221,6 +258,38 @@ def list_cohort_outcomes(cohort_id: str) -> dict[str, list[dict[str, object]]]:
     return {"outcomes": outcomes}
 
 
+@app.post("/api/cohorts/{cohort_id}/import")
+async def import_cohort(cohort_id: str, request: Request) -> dict[str, object]:
+    """Replace the roster from a CSV body (header: id,name,engagement,
+    reflection_count,calling — calling `;`-separated). All-or-nothing."""
+    body = await request.body()
+    csv_text = body.decode("utf-8-sig")  # utf-8-sig: Excel exports lead with a BOM
+    try:
+        imported = cohort_fixtures.import_cohort_csv(cohort_id, csv_text)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"cohort {cohort_id} not found") from None
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from None
+    return {"cohort_id": cohort_id, "imported": imported}
+
+
+# Mentor memory — user-controlled, ChatGPT transparency pattern (REC-3):
+# what the mentor remembers is viewable and deletable, never a black box.
+
+
+@app.get("/api/memory/{student_id}")
+def list_mentor_memory(student_id: str) -> dict[str, list[dict[str, object]]]:
+    texts = vector_memory.list_memories(student_id)
+    return {"memories": [{"index": i, "text": t} for i, t in enumerate(texts)]}
+
+
+@app.delete("/api/memory/{student_id}/{index}", status_code=204)
+async def delete_mentor_memory(student_id: str, index: int) -> None:
+    deleted = await vector_memory.delete_memory(student_id, index)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"no memory {index} for {student_id}")
+
+
 # Prayer + prophecy ledgers. Track records for both. See backend/services/prayer.py.
 class PrayerRequestIn(BaseModel):
     student_id: str = Field(min_length=1)
@@ -265,7 +334,7 @@ class CohortPolicyIn(BaseModel):
     tradition: str
 
 
-def _serialize(obj) -> dict:
+def _serialize(obj: Any) -> dict[str, Any]:
     return prayer_service.to_dict(obj)
 
 
@@ -428,6 +497,25 @@ def get_cohort_prayer_rhythm(cohort_id: str) -> dict[str, object]:
         raise HTTPException(status_code=404, detail=f"cohort {cohort_id} not found")
     rhythm = prayer_service.cohort_rhythm(s["id"] for s in students)
     return {"cohort_id": cohort_id, "rhythm": rhythm}
+
+
+@app.get("/api/journey")
+def get_journey() -> dict[str, object]:
+    """The cohort's shared 40-day journey (C4): same day for everyone,
+    derived from the calendar (KC_JOURNEY_START), nothing to persist."""
+    return journey_service.current_journey()
+
+
+@app.get("/api/cohorts/{cohort_id}/pulse-note")
+async def get_cohort_pulse_note(cohort_id: str) -> dict[str, object]:
+    """One LLM-composed pastoral paragraph from counts-only aggregates (C5).
+    The prompt never sees names or ledger content — see services/pulse.py."""
+    students = cohort_fixtures.list_students(cohort_id)
+    if not students:
+        raise HTTPException(status_code=404, detail=f"cohort {cohort_id} not found")
+    rhythm_rows = prayer_service.cohort_rhythm(s["id"] for s in students)
+    note = await pulse_service.compose_pulse_note(students, rhythm_rows)
+    return {"cohort_id": cohort_id, "note": note}
 
 
 @app.get("/api/cohorts/{cohort_id}/policy")
