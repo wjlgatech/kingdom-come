@@ -148,6 +148,19 @@ This is one of the most useful things the app does. When you hear that a student
 
 That outcome shows up at the top of their record. Over a year, you build up a real story of who this person is becoming — not just their grades.
 
+## Ask the app anything (the ✦ button)
+
+Bottom-right of your home screen there's a small **Ask ✦** button — for
+students and teachers both. Click it, type a question ("Who needs me this
+week?", "How am I doing?"), or tap one of the suggestions. The app reads its
+own live data — the same statuses and counts you see on screen — and answers
+in a couple of sentences. Small tags labeled **Consulted** show you exactly
+which sources it read.
+
+Two honest limits: a teacher's Ask can see *counts and statuses only* (never
+anyone's prayers or reflections), and a student's Ask sees only their own
+record.
+
 ## Two clicks, that's it
 
 If you remember nothing else: most things in Kingdom Come are two clicks away. Open the page, do the thing. No settings to learn, no menus to dig through.

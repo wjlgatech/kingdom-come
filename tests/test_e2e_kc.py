@@ -36,11 +36,13 @@ def live_app():
     }
     env.pop("REDIS_URL", None)
     env.pop("KC_DEMO_SEED", None)  # tests assert on empty ledgers
+    # DEVNULL, never PIPE: nothing drains the pipe during the run, so uvicorn's
+    # per-request access log fills the 64KB buffer after ~17 tests and the
+    # server freezes mid-suite (blocked stdout write → connection resets).
     process = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "backend.app:app", "--host", "127.0.0.1", "--port", str(port)],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
         env=env,
     )
     deadline = time.time() + 10
@@ -50,9 +52,8 @@ def live_app():
                 break
         time.sleep(0.1)
     else:
-        output = process.stdout.read() if process.stdout else ""
         process.terminate()
-        raise RuntimeError(f"Uvicorn did not start: {output}")
+        raise RuntimeError("Uvicorn did not start (run it by hand to see why)")
 
     yield f"http://127.0.0.1:{port}"
 
@@ -83,7 +84,7 @@ def test_e2e_door_redirects_existing_seminarian_to_me(live_app):
             page = browser.new_page(viewport={"width": 1440, "height": 900})
 
             # First visit: door is visible.
-            page.goto(live_app, wait_until="networkidle")
+            page.goto(live_app, wait_until="domcontentloaded")
             assert page.get_by_test_id("role-card-seminarian").is_visible()
             assert page.get_by_test_id("role-card-director").is_visible()
 
@@ -110,7 +111,7 @@ def test_e2e_door_redirects_existing_director_to_triage(live_app):
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": 1440, "height": 900})
-            page.goto(live_app, wait_until="networkidle")
+            page.goto(live_app, wait_until="domcontentloaded")
             page.get_by_test_id("role-card-director").click()
             page.wait_for_url(f"{live_app}/cohort/triage")
 
@@ -131,7 +132,7 @@ def test_e2e_me_renders_status_and_path(live_app):
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": 1440, "height": 900})
             _seed_role(page, "seminarian", live_app)
-            page.goto(f"{live_app}/me", wait_until="networkidle")
+            page.goto(f"{live_app}/me", wait_until="domcontentloaded")
 
             page.wait_for_function(
                 "() => document.querySelector('[data-testid=\"me-status-pill\"]') !== null"
@@ -159,7 +160,7 @@ def test_e2e_chat_streams_reply_and_renders_memory_pills_on_second_send(live_app
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": 1440, "height": 900})
             _seed_role(page, "seminarian", live_app)
-            page.goto(f"{live_app}/me/chat", wait_until="networkidle")
+            page.goto(f"{live_app}/me/chat", wait_until="domcontentloaded")
 
             page.get_by_test_id("chat-message-input").fill("I'm wrestling with the readings this week.")
             page.get_by_test_id("chat-send").click()
@@ -190,7 +191,7 @@ def test_e2e_manage_memory_lists_and_forgets(live_app):
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": 1440, "height": 900})
             _seed_role(page, "seminarian", live_app)
-            page.goto(f"{live_app}/me/chat", wait_until="networkidle")
+            page.goto(f"{live_app}/me/chat", wait_until="domcontentloaded")
 
             page.get_by_test_id("chat-manage-memory").click()
             page.wait_for_function(
@@ -217,7 +218,7 @@ def test_e2e_triage_renders_named_statuses_with_reasons(live_app):
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": 1440, "height": 900})
             _seed_role(page, "director", live_app)
-            page.goto(f"{live_app}/cohort/triage", wait_until="networkidle")
+            page.goto(f"{live_app}/cohort/triage", wait_until="domcontentloaded")
 
             page.wait_for_function(
                 "() => document.querySelectorAll('[data-testid=\"triage-row\"]').length >= 2"
@@ -247,7 +248,7 @@ def test_e2e_profile_log_outcome_two_clicks(live_app):
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": 1440, "height": 900})
             _seed_role(page, "director", live_app)
-            page.goto(f"{live_app}/students/stu-anna-t", wait_until="networkidle")
+            page.goto(f"{live_app}/students/stu-anna-t", wait_until="domcontentloaded")
 
             # Profile header loads.
             page.wait_for_function(
@@ -281,7 +282,7 @@ def test_e2e_profile_modal_esc_closes_and_returns_focus(live_app):
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": 1440, "height": 900})
             _seed_role(page, "director", live_app)
-            page.goto(f"{live_app}/students/stu-marcus-r", wait_until="networkidle")
+            page.goto(f"{live_app}/students/stu-marcus-r", wait_until="domcontentloaded")
             page.wait_for_function(
                 "() => /Marcus/.test(document.querySelector('[data-testid=\"profile-name\"]')?.innerText ?? '')"
             )
@@ -306,7 +307,7 @@ def test_e2e_timeline_renders_weekly_arc(live_app):
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": 1440, "height": 900})
             _seed_role(page, "seminarian", live_app)
-            page.goto(f"{live_app}/me/timeline", wait_until="networkidle")
+            page.goto(f"{live_app}/me/timeline", wait_until="domcontentloaded")
 
             page.wait_for_function(
                 "() => document.querySelectorAll('[data-testid=\"timeline-week\"]').length >= 3"
@@ -330,7 +331,7 @@ def test_e2e_cohort_overview_renders_chart_and_snippet(live_app):
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": 1440, "height": 900})
             _seed_role(page, "director", live_app)
-            page.goto(f"{live_app}/cohort", wait_until="networkidle")
+            page.goto(f"{live_app}/cohort", wait_until="domcontentloaded")
 
             # Chart SVG renders synchronously; snippet rows wait for fetch.
             page.wait_for_function(
@@ -359,7 +360,7 @@ def test_e2e_groups_drag_distribute_and_suggest(live_app):
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": 1440, "height": 900})
             _seed_role(page, "director", live_app)
-            page.goto(f"{live_app}/cohort/groups", wait_until="networkidle")
+            page.goto(f"{live_app}/cohort/groups", wait_until="domcontentloaded")
 
             # Roster starts populated, groups empty.
             page.wait_for_function(
@@ -398,13 +399,42 @@ def test_e2e_invalid_student_id_renders_not_found(live_app):
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": 1440, "height": 900})
             _seed_role(page, "director", live_app)
-            page.goto(f"{live_app}/students/bogus-id", wait_until="networkidle")
+            page.goto(f"{live_app}/students/bogus-id", wait_until="domcontentloaded")
             page.wait_for_function(
                 "() => document.querySelector('[data-testid=\"profile-not-found\"]') !== null"
             )
             browser.close()
     except Error as exc:
         pytest.fail(f"Playwright not-found flow failed: {exc}")
+
+
+def test_e2e_copilot_answers_grounded_from_live_tools(live_app):
+    """The Copilot door: the director opens the panel, clicks a starter
+    question, and gets 'Consulted:' pills plus an answer composed from the
+    app's real triage/rhythm/journey data (deterministic grounded digest in
+    fake-LLM mode — true numbers, not a canned line)."""
+    try:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch()
+            page = browser.new_page(viewport={"width": 1440, "height": 900})
+            _seed_role(page, "director", live_app)
+            page.goto(f"{live_app}/cohort", wait_until="domcontentloaded")
+
+            page.get_by_test_id("copilot-trigger").click()
+            page.wait_for_function(
+                "() => document.querySelector('[data-testid=\"copilot-panel\"]') !== null"
+            )
+            page.query_selector_all("[data-testid='copilot-starter']")[0].click()
+
+            page.wait_for_function(
+                "() => document.querySelectorAll('[data-testid=\"copilot-pill\"]').length >= 3"
+            )
+            page.wait_for_function(
+                "() => /of 24 students/.test(document.querySelector('[data-testid=\"copilot-answer\"]')?.textContent ?? '')"
+            )
+            browser.close()
+    except Error as exc:
+        pytest.fail(f"Playwright copilot flow failed: {exc}")
 
 
 def test_e2e_mobile_subnav_docks_to_bottom(live_app):
@@ -415,7 +445,7 @@ def test_e2e_mobile_subnav_docks_to_bottom(live_app):
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": 390, "height": 844})
             _seed_role(page, "seminarian", live_app)
-            page.goto(f"{live_app}/me", wait_until="networkidle")
+            page.goto(f"{live_app}/me", wait_until="domcontentloaded")
             position = page.evaluate(
                 "() => getComputedStyle(document.querySelector('.kc-subnav')).position"
             )
@@ -423,7 +453,7 @@ def test_e2e_mobile_subnav_docks_to_bottom(live_app):
 
             desktop = browser.new_page(viewport={"width": 1440, "height": 900})
             _seed_role(desktop, "seminarian", live_app)
-            desktop.goto(f"{live_app}/me", wait_until="networkidle")
+            desktop.goto(f"{live_app}/me", wait_until="domcontentloaded")
             position = desktop.evaluate(
                 "() => getComputedStyle(document.querySelector('.kc-subnav')).position"
             )
@@ -441,7 +471,7 @@ def test_e2e_formation_year_renders_numbers_and_lines(live_app):
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": 1440, "height": 1000})
             _seed_role(page, "seminarian", live_app)
-            page.goto(f"{live_app}/me/year", wait_until="networkidle")
+            page.goto(f"{live_app}/me/year", wait_until="domcontentloaded")
 
             # Numbers fill in (Marcus's fixture has 3 reflections).
             page.wait_for_function(
@@ -474,7 +504,7 @@ def test_e2e_first_run_tour_steps_and_persists_dismissal(live_app):
                 "() => { localStorage.setItem('kc-role', 'seminarian');"
                 " localStorage.setItem('kc-student-id', 'stu-marcus-r'); }"
             )
-            page.goto(f"{live_app}/me", wait_until="networkidle")
+            page.goto(f"{live_app}/me", wait_until="domcontentloaded")
 
             page.wait_for_function(
                 "() => document.querySelector('[data-testid=\"kc-tour\"]') !== null"
@@ -489,7 +519,7 @@ def test_e2e_first_run_tour_steps_and_persists_dismissal(live_app):
                 "() => document.querySelector('[data-testid=\"kc-tour\"]') === null"
             )
 
-            page.reload(wait_until="networkidle")
+            page.reload(wait_until="domcontentloaded")
             page.wait_for_function(
                 "() => document.querySelector('[data-testid=\"me-status-pill\"]') !== null"
             )
@@ -507,7 +537,7 @@ def test_e2e_door_previews_swap_in_live_data(live_app):
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": 1440, "height": 900})
-            page.goto(live_app, wait_until="networkidle")
+            page.goto(live_app, wait_until="domcontentloaded")
 
             page.wait_for_function(
                 "() => (document.querySelector('[data-testid=\"door-preview-next-step\"]')?.textContent ?? '')"
@@ -530,7 +560,7 @@ def test_e2e_prayer_submit_petition_then_mark_answered(live_app):
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": 1440, "height": 1000})
             _seed_role(page, "seminarian", live_app)
-            page.goto(f"{live_app}/me/prayer", wait_until="networkidle")
+            page.goto(f"{live_app}/me/prayer", wait_until="domcontentloaded")
 
             # Empty ledger shows the witnessed-not-graded empty state.
             page.wait_for_function(
@@ -599,7 +629,7 @@ def test_e2e_prayer_weigh_queue_clears_after_judgment(live_app):
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": 1440, "height": 1000})
             _seed_role(page, "seminarian", live_app)
-            page.goto(f"{live_app}/me/prayer", wait_until="networkidle")
+            page.goto(f"{live_app}/me/prayer", wait_until="domcontentloaded")
 
             # Badge shows at least one word awaiting his discernment.
             page.wait_for_function(

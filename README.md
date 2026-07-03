@@ -31,6 +31,7 @@ What you get on day one:
 - **Class orchestration actions** that identify groups needing intervention.
 - **Ministry outcome snapshots** that connect field impact back to formation.
 - **An AI mentor with memory you control** — view and forget what it remembers.
+- **The Copilot door (`Ask ✦`)** — ask the app about your week and it answers from its own live signals (the browser opens a socket, the server runs your role's tools and grounds one reply on them), showing "Consulted" pills for every source it read. Works with zero LLM keys.
 - **Prayer + prophecy ledgers** with track records that can persist across restarts (`KC_PERSIST=1`).
 - **The Formation Year** (`/me/year`) — a student's whole year assembled as one editorial page.
 - **CSV roster import**, a shared 40-day journey, installable PWA, first-run tours.

@@ -9,6 +9,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
 from backend.api.ws_chat import router as ws_chat_router
+from backend.api.ws_copilot import router as ws_copilot_router
 from backend.fixtures import cohort as cohort_fixtures
 from backend.services import journey as journey_service
 from backend.services import prayer as prayer_service
@@ -31,6 +32,7 @@ if not FRONTEND_DIR.is_dir():
 
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 app.include_router(ws_chat_router)
+app.include_router(ws_copilot_router)
 
 # Opt-in write-through persistence for the ledgers (KC_PERSIST=1): creates
 # the tables (init_db stays opt-in) and replays persisted records into the

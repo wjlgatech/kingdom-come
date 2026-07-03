@@ -1,6 +1,7 @@
 import { findStudent } from "/static/cohort_data.js";
 import { STATUS, statusFromRisk, statusLabel, statusClass, reasonsToSentence } from "/static/status.js";
 import { mountTour } from "/static/tour.js";
+import { mountCopilot } from "/static/copilot.js";
 
 mountTour("me", [
   {
@@ -128,3 +129,5 @@ async function renderJourney() {
 
 init();
 renderJourney();
+
+mountCopilot();
