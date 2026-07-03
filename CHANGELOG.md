@@ -22,6 +22,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   both). *Why:* the northstar — agents as another door into the same room —
   now includes the room itself.
 
+- **Voice input on the mentor chat and the Copilot** — tap the mic, speak,
+  tap again; the browser records (MediaRecorder) and one POST to
+  `/api/voice/transcribe` returns the text (same stack as dreammaketrue's
+  `/voice`). Transcription chain in `backend/services/stt.py`:
+  `VOICE_FAKE_TEXT` (tests) → faster-whisper (`.[voice]` extra, local CPU) →
+  OpenAI Whisper API → unavailable — and `GET /api/voice/health` lets the UI
+  hide the mic when nothing can transcribe. Silence diagnostics ported from
+  the reference (opus ≈1KB/s silence ratio → "the browser picked the wrong
+  mic"). No audio is ever persisted or logged — this app carries prayer.
+
 ### Fixed
 
 - **E2E server freeze at ~18 tests** — the `live_app` fixtures piped uvicorn's

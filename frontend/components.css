@@ -449,3 +449,20 @@ body.paper::before {
   .bubble { max-width: 95%; }
   .kc-modal { padding: var(--space-24); border-radius: var(--radius-md); }
 }
+
+/* Voice input mic (shared by chat + copilot). */
+.voice-mic {
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  padding: var(--space-8) var(--space-12);
+  cursor: pointer;
+  font-size: var(--text-base);
+  line-height: 1;
+}
+.voice-mic:hover { border-color: var(--ink-muted); }
+.voice-mic.rec {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  animation: skeleton-pulse 1.2s ease-in-out infinite alternate;
+}

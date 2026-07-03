@@ -33,6 +33,11 @@ mcp = [
 standalone = [
     "fakeredis>=2.20",
 ]
+# Local speech-to-text for voice input (backend/services/stt.py); without it
+# the chain falls through to the OpenAI Whisper API or reports unavailable.
+voice = [
+    "faster-whisper>=1.0",
+]
 
 [project.scripts]
 kingdom-come = "backend.cli:main"

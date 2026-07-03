@@ -161,6 +161,16 @@ Two honest limits: a teacher's Ask can see *counts and statuses only* (never
 anyone's prayers or reflections), and a student's Ask sees only their own
 record.
 
+## Speak instead of typing
+
+Next to the chat box (and inside Ask ✦) there's a small **🎙** button when the
+server can transcribe speech. Tap it, say your reflection or question out
+loud, tap again — your words appear as text. Your voice is turned into text
+and immediately thrown away; the recording is never saved anywhere.
+
+If you don't see the mic, the server has no transcription engine set up
+(it needs the `voice` extra or an OpenAI key) — typing works exactly the same.
+
 ## Two clicks, that's it
 
 If you remember nothing else: most things in Kingdom Come are two clicks away. Open the page, do the thing. No settings to learn, no menus to dig through.

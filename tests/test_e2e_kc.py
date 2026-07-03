@@ -33,6 +33,7 @@ def live_app():
         **os.environ,
         "EMBEDDING_FAKE": "1",
         "LLM_FAKE_RESPONSE": "Walk gently into this week.",
+        "VOICE_FAKE_TEXT": "Give me courage for Thursday.",
     }
     env.pop("REDIS_URL", None)
     env.pop("KC_DEMO_SEED", None)  # tests assert on empty ledgers
@@ -180,6 +181,25 @@ def test_e2e_chat_streams_reply_and_renders_memory_pills_on_second_send(live_app
             browser.close()
     except Error as exc:
         pytest.fail(f"Playwright chat flow failed: {exc}")
+
+
+def test_e2e_voice_mic_mounts_when_backend_available(live_app):
+    """Voice input: the mic button appears next to the chat input because the
+    server's health probe reports a live transcription tier (VOICE_FAKE_TEXT
+    in this fixture). Actual audio capture is covered by the fake-media rig
+    pattern (enduser-webtest), not here."""
+    try:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch()
+            page = browser.new_page(viewport={"width": 1440, "height": 900})
+            _seed_role(page, "seminarian", live_app)
+            page.goto(f"{live_app}/me/chat", wait_until="domcontentloaded")
+            page.wait_for_function(
+                "() => document.querySelector('[data-testid=\"voice-mic\"]') !== null"
+            )
+            browser.close()
+    except Error as exc:
+        pytest.fail(f"Playwright voice mount failed: {exc}")
 
 
 def test_e2e_manage_memory_lists_and_forgets(live_app):

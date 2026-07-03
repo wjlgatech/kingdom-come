@@ -146,6 +146,16 @@ export function mountCopilot() {
       const q = panel.querySelector("#copilot-q").value.trim();
       if (q) ask(q);
     });
+    import("/static/voice.js").then(({ mountVoiceInput }) =>
+      mountVoiceInput(panel.querySelector("#copilot-q"), {
+        onText: (text) => ask(text),
+        onNote: (text) => {
+          const answer = panel.querySelector("[data-testid='copilot-answer']");
+          answer.textContent = text;
+          answer.dataset.state = "error";
+        },
+      }),
+    );
     panel.querySelector("#copilot-q").focus();
   }
 
