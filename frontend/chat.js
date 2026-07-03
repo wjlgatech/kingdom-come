@@ -138,6 +138,73 @@ messageInput.addEventListener("keydown", (e) => {
   }
 });
 
+// ---- user-controlled memory (REC-3, ChatGPT transparency pattern) ----
+
+function memoryRow(m, listEl) {
+  const row = document.createElement("li");
+  row.className = "memory-row";
+  row.dataset.testid = "memory-row";
+  const text = document.createElement("span");
+  text.className = "memory-row-text";
+  text.textContent = m.text;
+  row.appendChild(text);
+  const forget = document.createElement("button");
+  forget.type = "button";
+  forget.className = "btn btn-ghost inline";
+  forget.dataset.testid = "memory-forget";
+  forget.textContent = "Forget";
+  forget.addEventListener("click", async () => {
+    forget.disabled = true;
+    try {
+      const res = await fetch(`/api/memory/${encodeURIComponent(studentId)}/${m.index}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await renderMemoryList(listEl); // indices shift after a delete — re-fetch
+    } catch {
+      forget.disabled = false;
+    }
+  });
+  row.appendChild(forget);
+  return row;
+}
+
+async function renderMemoryList(listEl) {
+  const res = await fetch(`/api/memory/${encodeURIComponent(studentId)}`);
+  const memories = res.ok ? (await res.json()).memories : [];
+  listEl.innerHTML = "";
+  if (memories.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "empty-state";
+    empty.dataset.testid = "memory-empty";
+    empty.textContent = "Nothing remembered yet. Memories build as you reflect.";
+    listEl.appendChild(empty);
+    return;
+  }
+  memories.forEach((m) => listEl.appendChild(memoryRow(m, listEl)));
+}
+
+function openMemoryModal() {
+  const backdrop = document.createElement("div");
+  backdrop.className = "kc-modal-backdrop";
+  backdrop.dataset.testid = "memory-modal";
+  backdrop.innerHTML = `
+    <div class="kc-modal" role="dialog" aria-modal="true" aria-labelledby="memory-modal-title">
+      <button type="button" class="kc-modal-close" data-testid="memory-modal-close" aria-label="Close">×</button>
+      <h2 id="memory-modal-title" style="font-family: var(--serif-display); font-weight: 400; margin: 0 0 var(--space-8);">What your mentor remembers</h2>
+      <p class="memory-modal-note">These shape how the mentor answers you. Forget anything that shouldn't.</p>
+      <ul class="memory-list" data-testid="memory-list"></ul>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+  const close = () => backdrop.remove();
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) close(); });
+  backdrop.querySelector("[data-testid='memory-modal-close']").addEventListener("click", close);
+  backdrop.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+  backdrop.querySelector("[data-testid='memory-modal-close']").focus();
+  renderMemoryList(backdrop.querySelector("[data-testid='memory-list']"));
+}
+
+document.querySelector("[data-testid='chat-manage-memory']")?.addEventListener("click", openMemoryModal);
+
 // Auto-focus input and open the socket on load, so the status pill reads
 // "connected" instead of sitting on the static "disconnected" text until
 // the first send (REC-3: the thread should feel alive on arrival).

@@ -42,3 +42,10 @@
   line-height: 1.5;
   margin: 0 0 var(--space-16);
 }
+
+.me-journey {
+  font-family: var(--sans);
+  font-size: var(--text-sm);
+  color: var(--accent);
+  margin: var(--space-8) 0 0;
+}

@@ -113,7 +113,7 @@ The prayer/prophecy ledgers are exposed as 11 MCP tools so any agent harness can
 
 ## Persistence note
 
-The current implementation keeps state in-process (matches the project's pattern; see `vector_memory._store`). Tests must call `prayer.reset()` between cases. Real persistence (SQLAlchemy-backed) is the natural next step — the dataclass shapes in `backend/services/prayer.py` map cleanly onto `MinistryOutcome`-style models.
+State is in-process by default (matches the project's pattern; see `vector_memory._store`); tests must call `prayer.reset()` between cases. Set `KC_PERSIST=1` and the ledgers survive restarts: every mutation write-through upserts a JSON row (`backend/models/ledger.py`, table `ledger_records`) and startup replays the rows back into memory (`prayer.enable_persistence()`). Reads never touch the database.
 
 ## Out of scope (future)
 

@@ -27,7 +27,7 @@ from __future__ import annotations
 import uuid
 from collections import Counter
 from copy import deepcopy
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Iterable, Literal
 
@@ -94,12 +94,78 @@ _state: dict[str, Any] = {
     "policies": {},         # cohort_id -> CohortPolicy
 }
 
+# Write-through persistence (opt-in; see enable_persistence). None = the
+# in-memory-only default every test relies on.
+_session_factory: Any = None
+
 
 def reset() -> None:
     _state["prayers"].clear()
     _state["intercessions"].clear()
     _state["prophecies"].clear()
     _state["policies"].clear()
+    if _session_factory is not None:
+        from backend.models.ledger import LedgerRecord
+
+        with _session_factory() as session:
+            session.query(LedgerRecord).delete()
+            session.commit()
+
+
+def enable_persistence(session_factory: Any = None) -> None:
+    """Turn on write-through persistence and load any persisted ledgers.
+
+    The in-process dicts stay the read path; every mutation additionally
+    upserts a JSON row (`backend/models/ledger.py`), and this call replays
+    those rows into `_state` so the ledgers survive a restart. The app wires
+    it when KC_PERSIST=1 (after init_db, before the demo seed — a non-empty
+    reload makes seed_demo a no-op). Pass a sessionmaker for tests; defaults
+    to the app engine's SessionLocal.
+    """
+    global _session_factory
+    if session_factory is None:
+        from backend.db.connection import SessionLocal
+
+        session_factory = SessionLocal
+    _session_factory = session_factory
+    _load_persisted()
+
+
+def disable_persistence() -> None:
+    global _session_factory
+    _session_factory = None
+
+
+def _persist(kind: str, rec_id: str, payload: dict[str, Any]) -> None:
+    if _session_factory is None:
+        return
+    import json
+
+    from backend.models.ledger import LedgerRecord
+
+    with _session_factory() as session:
+        session.merge(LedgerRecord(kind=kind, rec_id=rec_id, data=json.dumps(payload)))
+        session.commit()
+
+
+def _load_persisted() -> None:
+    import json
+
+    from backend.models.ledger import LedgerRecord
+
+    with _session_factory() as session:
+        rows = session.query(LedgerRecord).all()
+    for row in rows:
+        data = json.loads(row.data)
+        if row.kind == "prayer":
+            _state["prayers"][data["id"]] = PrayerRequest(**data)
+        elif row.kind == "intercession":
+            _state["intercessions"].append(Intercession(**data))
+        elif row.kind == "prophecy":
+            _state["prophecies"][data["id"]] = Prophecy(**data)
+        elif row.kind == "policy":
+            _state["policies"][data["cohort_id"]] = CohortPolicy(**data)
+    _state["intercessions"].sort(key=lambda i: i.created_at)
 
 
 def _now() -> str:
@@ -123,6 +189,7 @@ def set_policy(cohort_id: str, tradition: Tradition) -> CohortPolicy:
         raise ValueError(f"unknown tradition: {tradition}")
     policy = CohortPolicy(cohort_id=cohort_id, tradition=tradition)
     _state["policies"][cohort_id] = policy
+    _persist("policy", cohort_id, asdict(policy))
     return policy
 
 
@@ -153,6 +220,7 @@ def submit_prayer(
         created_at=_now(),
     )
     _state["prayers"][pr.id] = pr
+    _persist("prayer", pr.id, asdict(pr))
     return pr
 
 
@@ -161,6 +229,7 @@ def watch_prayer(prayer_id: str) -> PrayerRequest:
     if pr.status in ANSWER_STATUSES:
         raise ValueError(f"prayer {prayer_id} is already resolved as {pr.status}")
     pr.status = "watching"
+    _persist("prayer", pr.id, asdict(pr))
     return pr
 
 
@@ -183,6 +252,7 @@ def mark_answered(
         "witnesses": list(witnesses or []),
         "answered_at": _now(),
     }
+    _persist("prayer", pr.id, asdict(pr))
     return pr
 
 
@@ -195,6 +265,7 @@ def add_intercession(prayer_id: str, peer_id: str, message: str = "") -> Interce
         created_at=_now(),
     )
     _state["intercessions"].append(intercession)
+    _persist("intercession", _uid("ic"), asdict(intercession))
     return intercession
 
 
@@ -257,6 +328,7 @@ def submit_prophecy(
         created_at=_now(),
     )
     _state["prophecies"][p.id] = p
+    _persist("prophecy", p.id, asdict(p))
     return p
 
 
@@ -283,6 +355,7 @@ def weigh_prophecy(
     if p.status == "spoken":
         p.status = "weighing"
     p.status = _resolve_prophecy_status(p)
+    _persist("prophecy", p.id, asdict(p))
     return p
 
 
@@ -308,6 +381,7 @@ def record_fulfillment(
         "witnesses": list(witnesses or []),
         "recorded_at": _now(),
     }
+    _persist("prophecy", p.id, asdict(p))
     return p
 
 
@@ -471,7 +545,12 @@ def seed_demo() -> None:
     """
     if _state["prayers"] or _state["prophecies"]:
         return
+    _seed_demo_prayers()
+    _seed_demo_prophecies()
 
+
+def _seed_demo_prayers() -> None:
+    """Demo prayer ledger: a carried petition, a private one, and an answered one."""
     p1 = submit_prayer(
         student_id="stu-marcus-r",
         petition="Wisdom for the Mission Theology essay — and honesty about why it scares me.",
@@ -509,6 +588,9 @@ def seed_demo() -> None:
         recipient_ids=["stu-marcus-r", "stu-isabel-m"],
     )
 
+
+def _seed_demo_prophecies() -> None:
+    """Demo prophecy ledger: one confirmed word, one awaiting weighing, one refined."""
     # A word over Marcus, confirmed 2-of-3, fulfillment still open for him to record.
     ph1 = submit_prophecy(
         speaker_id="stu-luca-b",

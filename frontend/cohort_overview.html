@@ -6,10 +6,17 @@
 <script>document.body.dataset.role = "director";</script>
 
 <section class="cohort-header">
-  <h1 class="cohort-headline" data-testid="cohort-headline">St. Aloysius cohort, <em>Spring 2026</em></h1>
+  <div class="cohort-header-row">
+    <h1 class="cohort-headline" data-testid="cohort-headline">St. Aloysius cohort, <em>Spring 2026</em></h1>
+    <button type="button" class="btn btn-ghost inline" data-testid="cohort-import-csv" title="Replace the roster from a CSV: id,name,engagement,reflection_count,calling">Import roster (CSV)</button>
+    <input type="file" accept=".csv,text/csv" data-testid="cohort-import-input" class="visually-hidden" aria-label="Roster CSV file" />
+  </div>
   <p class="cohort-paragraph" data-testid="cohort-paragraph">
     <span class="skeleton" style="display: inline-block; width: 80%; height: 1.5em; vertical-align: middle;"></span>
   </p>
+  <p class="cohort-pulse-note" data-testid="cohort-pulse-note" hidden></p>
+  <p class="cohort-journey-line" data-testid="cohort-journey-line" hidden></p>
+  <div data-testid="cohort-import-status"></div>
 </section>
 
 <section class="cohort-chart-section" aria-labelledby="chart-h">
@@ -38,7 +45,7 @@
     <h2 class="cohort-section-label" id="snippet-h">Who needs you this week</h2>
     <a href="/cohort/triage" class="btn btn-ghost inline" data-testid="cohort-go-to-triage">Open triage →</a>
   </div>
-  <div class="cohort-snippet-list" data-testid="cohort-snippet-list" aria-busy="true">
+  <div class="cohort-snippet-list" data-testid="cohort-snippet-list" aria-busy="true" data-skeleton>
     <!-- top 3 flagged students injected by cohort_overview.js -->
   </div>
 </section>

@@ -109,6 +109,31 @@
   flex-wrap: wrap;
 }
 
+/* The answered arc — the petition's journey in one line: asked, carried, answered. */
+.answered-arc {
+  font-family: var(--sans);
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+  font-feature-settings: "tnum";
+  margin: var(--space-12) 0 0;
+  padding-top: var(--space-12);
+  border-top: 1px solid var(--hairline);
+}
+.answered-arc-favorable {
+  color: var(--status-thriving);
+  border-top-color: var(--status-thriving);
+}
+
+/* One quiet reveal when a petition resolves — status color fading back to
+   the surface. Collapses to instant under prefers-reduced-motion. */
+.answered-moment { animation: answered-in var(--motion-long) ease-out; }
+@keyframes answered-in {
+  from {
+    background: var(--status-thriving-soft);
+    border-color: var(--status-thriving);
+  }
+}
+
 .weigh-rule {
   font-family: var(--serif-body);
   font-style: italic;

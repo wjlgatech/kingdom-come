@@ -1,6 +1,6 @@
 [project]
-name = "seminary-formation-platform"
-version = "0.8.0"
+name = "kingdom-come"
+version = "0.9.0"
 description = "V7 backend for predictive formation, adaptive curriculum, outcomes, and class orchestration."
 requires-python = ">=3.11"
 dependencies = [
@@ -35,10 +35,17 @@ standalone = [
 ]
 
 [project.scripts]
+kingdom-come = "backend.cli:main"
 kingdom-come-mcp = "mcp_server.server:main"
 
+# Ship the frontend (templates + static assets) inside the wheel as a
+# `frontend` package so `uvx kingdom-come` works with no checkout — app.py
+# falls back to importlib.resources when the repo layout isn't present.
 [tool.setuptools.packages.find]
-include = ["backend*", "mcp_server*"]
+include = ["backend*", "mcp_server*", "frontend"]
+
+[tool.setuptools.package-data]
+frontend = ["**/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

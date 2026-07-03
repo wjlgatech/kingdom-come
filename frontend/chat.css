@@ -85,3 +85,34 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* Manage-memory modal (REC-3): the list of what the mentor remembers. */
+.memory-modal-note {
+  font-family: var(--sans);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  margin: 0 0 var(--space-16);
+}
+.memory-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 50vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+.memory-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-16);
+  padding: var(--space-12);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+}
+.memory-row-text {
+  font-family: var(--serif-body);
+  font-size: var(--text-base);
+}

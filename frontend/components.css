@@ -349,6 +349,61 @@ body.paper::before {
   border: 0;
 }
 
+/* First-run tour — a quiet three-step card, not a spotlight overlay. */
+.kc-tour {
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: var(--space-24);
+  margin-bottom: var(--space-32);
+}
+.kc-tour-label {
+  font-family: var(--sans);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin: 0 0 var(--space-8);
+}
+.kc-tour-title {
+  font-family: var(--serif-display);
+  font-weight: 400;
+  font-size: var(--text-xl);
+  margin: 0 0 var(--space-8);
+}
+.kc-tour-body {
+  font-family: var(--serif-body);
+  font-size: var(--text-base);
+  color: var(--ink-muted);
+  margin: 0 0 var(--space-16);
+  max-width: 56ch;
+}
+.kc-tour-footer { display: flex; align-items: center; gap: var(--space-16); }
+.kc-tour-dots { font-size: var(--text-xs); color: var(--ink-faint); margin-right: auto; letter-spacing: 0.2em; }
+
+/* Loading skeletons — two quiet placeholder cards render while a data
+   container is still aria-busy; they vanish the moment its JS clears the
+   attribute (success and error paths both do). Pulse collapses to instant
+   under prefers-reduced-motion below. */
+[data-skeleton][aria-busy="true"]::before,
+[data-skeleton][aria-busy="true"]::after {
+  content: "";
+  display: block;
+  height: 72px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  animation: skeleton-pulse 1.2s ease-in-out infinite alternate;
+}
+[data-skeleton][aria-busy="true"]::after {
+  animation-delay: 0.3s;
+  margin-top: var(--space-16);
+}
+@keyframes skeleton-pulse {
+  from { opacity: 0.45; }
+  to { opacity: 1; }
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -361,6 +416,35 @@ body.paper::before {
 /* Mobile */
 @media (max-width: 640px) {
   .kc-header, .kc-subnav, .kc-main { padding-left: var(--space-16); padding-right: var(--space-16); }
+
+  /* Thumb-reach bottom nav (B3, Hallow pattern): the persona subnav docks
+     to the bottom edge on phones; main gets clearance so nothing hides
+     behind it. Active state moves to a top border (it sits above the text). */
+  .kc-subnav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: none;
+    margin: 0;
+    padding: 0 var(--space-16);
+    justify-content: space-around;
+    gap: var(--space-8);
+    background: var(--surface);
+    border-top: 1px solid var(--hairline);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .kc-subnav a {
+    padding: var(--space-12) var(--space-8);
+    border-bottom: none;
+    border-top: 2px solid transparent;
+  }
+  .kc-subnav a[aria-current="page"] {
+    border-top-color: var(--accent);
+  }
+  body:has(.kc-subnav) .kc-main {
+    padding-bottom: calc(var(--space-64, 64px) + env(safe-area-inset-bottom));
+  }
   .kc-wordmark { display: none; }
   .bubble { max-width: 95%; }
   .kc-modal { padding: var(--space-24); border-radius: var(--radius-md); }

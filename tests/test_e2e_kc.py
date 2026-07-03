@@ -66,7 +66,14 @@ def _seed_role(page, role, base):
     card; for direct-page tests we set them via a tiny script before navigating."""
     page.goto(base, wait_until="domcontentloaded")
     sid = "stu-marcus-r" if role == "seminarian" else "fd-theresa"
-    page.evaluate(f"() => {{ localStorage.setItem('kc-role', '{role}'); localStorage.setItem('kc-student-id', '{sid}'); }}")
+    page.evaluate(
+        f"() => {{ localStorage.setItem('kc-role', '{role}');"
+        f" localStorage.setItem('kc-student-id', '{sid}');"
+        # Pre-dismiss the first-run tour so page tests stay focused on their
+        # surface; the tour has its own dedicated test.
+        " localStorage.setItem('kc-tour-me', 'done');"
+        " localStorage.setItem('kc-tour-cohort', 'done'); }"
+    )
 
 
 def test_e2e_door_redirects_existing_seminarian_to_me(live_app):
@@ -172,6 +179,34 @@ def test_e2e_chat_streams_reply_and_renders_memory_pills_on_second_send(live_app
             browser.close()
     except Error as exc:
         pytest.fail(f"Playwright chat flow failed: {exc}")
+
+
+def test_e2e_manage_memory_lists_and_forgets(live_app):
+    """REC-3 transparency: 'Manage memory' opens the list of what the mentor
+    remembers, and forgetting one removes it. Runs after the pills test on the
+    same module server, so stu-marcus-r already has remembered turns."""
+    try:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch()
+            page = browser.new_page(viewport={"width": 1440, "height": 900})
+            _seed_role(page, "seminarian", live_app)
+            page.goto(f"{live_app}/me/chat", wait_until="networkidle")
+
+            page.get_by_test_id("chat-manage-memory").click()
+            page.wait_for_function(
+                "() => document.querySelectorAll('[data-testid=\"memory-row\"]').length >= 1"
+            )
+            before = len(page.query_selector_all("[data-testid='memory-row']"))
+
+            page.query_selector_all("[data-testid='memory-forget']")[0].click()
+            page.wait_for_function(
+                "(n) => document.querySelectorAll('[data-testid=\"memory-row\"]').length === n - 1"
+                " || document.querySelector('[data-testid=\"memory-empty\"]') !== null",
+                arg=before,
+            )
+            browser.close()
+    except Error as exc:
+        pytest.fail(f"Playwright manage-memory flow failed: {exc}")
 
 
 def test_e2e_triage_renders_named_statuses_with_reasons(live_app):
@@ -372,6 +407,121 @@ def test_e2e_invalid_student_id_renders_not_found(live_app):
         pytest.fail(f"Playwright not-found flow failed: {exc}")
 
 
+def test_e2e_mobile_subnav_docks_to_bottom(live_app):
+    """B3 thumb-reach: on a phone viewport the persona subnav is fixed to the
+    bottom edge; on desktop it stays in the normal flow."""
+    try:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch()
+            page = browser.new_page(viewport={"width": 390, "height": 844})
+            _seed_role(page, "seminarian", live_app)
+            page.goto(f"{live_app}/me", wait_until="networkidle")
+            position = page.evaluate(
+                "() => getComputedStyle(document.querySelector('.kc-subnav')).position"
+            )
+            assert position == "fixed"
+
+            desktop = browser.new_page(viewport={"width": 1440, "height": 900})
+            _seed_role(desktop, "seminarian", live_app)
+            desktop.goto(f"{live_app}/me", wait_until="networkidle")
+            position = desktop.evaluate(
+                "() => getComputedStyle(document.querySelector('.kc-subnav')).position"
+            )
+            assert position == "relative"
+            browser.close()
+    except Error as exc:
+        pytest.fail(f"Playwright mobile-subnav flow failed: {exc}")
+
+
+def test_e2e_formation_year_renders_numbers_and_lines(live_app):
+    """C2: the Formation Year page assembles Marcus's record — the numbers
+    row fills with his real counts and his reflection lines render."""
+    try:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch()
+            page = browser.new_page(viewport={"width": 1440, "height": 1000})
+            _seed_role(page, "seminarian", live_app)
+            page.goto(f"{live_app}/me/year", wait_until="networkidle")
+
+            # Numbers fill in (Marcus's fixture has 3 reflections).
+            page.wait_for_function(
+                "() => document.querySelector('[data-testid=\"year-stat-reflections\"]')?.textContent === '3'"
+            )
+            # His reflection lines render as quotes.
+            page.wait_for_function(
+                "() => [...document.querySelectorAll('[data-testid=\"year-line\"]')]"
+                ".some((el) => el.textContent.includes('Led morning prayer'))"
+            )
+            # The weekly arc renders status words, never raw codes.
+            page.wait_for_function(
+                "() => /Thriving|Steady|Needs check-in/.test(document.querySelector('[data-testid=\"year-arc\"]')?.textContent ?? '')"
+            )
+            browser.close()
+    except Error as exc:
+        pytest.fail(f"Playwright formation-year flow failed: {exc}")
+
+
+def test_e2e_first_run_tour_steps_and_persists_dismissal(live_app):
+    """First visit to /me shows the three-step tour; finishing it persists
+    (localStorage kc-tour-me) so a reload doesn't show it again."""
+    try:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch()
+            page = browser.new_page(viewport={"width": 1440, "height": 900})
+            # Role seeded, tour NOT dismissed — this is the first-run state.
+            page.goto(live_app, wait_until="domcontentloaded")
+            page.evaluate(
+                "() => { localStorage.setItem('kc-role', 'seminarian');"
+                " localStorage.setItem('kc-student-id', 'stu-marcus-r'); }"
+            )
+            page.goto(f"{live_app}/me", wait_until="networkidle")
+
+            page.wait_for_function(
+                "() => document.querySelector('[data-testid=\"kc-tour\"]') !== null"
+            )
+            for _ in range(2):
+                page.get_by_test_id("kc-tour-next").click()
+            page.wait_for_function(
+                "() => document.querySelector('[data-testid=\"kc-tour-next\"]')?.textContent === 'Done'"
+            )
+            page.get_by_test_id("kc-tour-next").click()
+            page.wait_for_function(
+                "() => document.querySelector('[data-testid=\"kc-tour\"]') === null"
+            )
+
+            page.reload(wait_until="networkidle")
+            page.wait_for_function(
+                "() => document.querySelector('[data-testid=\"me-status-pill\"]') !== null"
+            )
+            assert page.query_selector("[data-testid='kc-tour']") is None
+            browser.close()
+    except Error as exc:
+        pytest.fail(f"Playwright tour flow failed: {exc}")
+
+
+def test_e2e_door_previews_swap_in_live_data(live_app):
+    """A first-time visitor's door cards preview what's behind them with live
+    numbers (REC-1 refinement): the seminarian card swaps in the real next
+    curriculum step; the director card renders a check-in count."""
+    try:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch()
+            page = browser.new_page(viewport={"width": 1440, "height": 900})
+            page.goto(live_app, wait_until="networkidle")
+
+            page.wait_for_function(
+                "() => (document.querySelector('[data-testid=\"door-preview-next-step\"]')?.textContent ?? '')"
+                ".startsWith('Your next step:')"
+            )
+            page.wait_for_function(
+                "() => /(\\d+ students? needs? a check-in|No one needs a check-in)/"
+                ".test(document.querySelector('[data-testid=\"door-preview-director-count\"]')?.textContent ?? '')"
+            )
+            browser.close()
+    except Error as exc:
+        pytest.fail(f"Playwright door preview flow failed: {exc}")
+
+
 def test_e2e_prayer_submit_petition_then_mark_answered(live_app):
     """Prayer ledger story: Marcus brings a petition, then records how it
     was answered — petition card, status pill, and testimony all render."""
@@ -403,6 +553,15 @@ def test_e2e_prayer_submit_petition_then_mark_answered(live_app):
             page.wait_for_function(
                 "() => [...document.querySelectorAll('[data-testid=\"prayer-testimony\"]')]"
                 ".some((el) => el.textContent.includes('Grace held'))"
+            )
+
+            # The answered arc composes the journey: asked · answered, with the
+            # one-time reveal class on the freshly answered card.
+            page.wait_for_function(
+                "() => { const arc = document.querySelector('[data-testid=\"prayer-answered-arc\"]');"
+                " return arc !== null && /Asked \\d{4}/.test(arc.textContent)"
+                " && /Answered \\d{4}/.test(arc.textContent)"
+                " && document.querySelector('.answered-moment') !== null; }"
             )
 
             # Track record line reflects the resolved petition.

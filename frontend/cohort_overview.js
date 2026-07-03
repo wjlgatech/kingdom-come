@@ -1,5 +1,54 @@
 import { COHORT, DEMO_DIRECTOR } from "/static/cohort_data.js";
 import { STATUS, statusFromRisk, statusLabel, statusClass, reasonsToSentence, avatarBackground, avatarInitials } from "/static/status.js";
+import { mountTour } from "/static/tour.js";
+
+// CSV roster import (B4): pick a file, POST it, reload so every surface
+// (top-level-awaited COHORT) picks up the new roster.
+const importBtn = document.querySelector("[data-testid='cohort-import-csv']");
+const importInput = document.querySelector("[data-testid='cohort-import-input']");
+const importStatus = document.querySelector("[data-testid='cohort-import-status']");
+importBtn?.addEventListener("click", () => importInput.click());
+importInput?.addEventListener("change", async () => {
+  const file = importInput.files?.[0];
+  if (!file) return;
+  importBtn.disabled = true;
+  importStatus.innerHTML = "";
+  try {
+    const res = await fetch(`/api/cohorts/${DEMO_DIRECTOR.cohort_id}/import`, {
+      method: "POST",
+      headers: { "Content-Type": "text/csv" },
+      body: await file.text(),
+    });
+    if (!res.ok) {
+      const detail = (await res.json().catch(() => ({}))).detail;
+      throw new Error(typeof detail === "string" ? detail : `HTTP ${res.status}`);
+    }
+    window.location.reload();
+  } catch (err) {
+    importBtn.disabled = false;
+    importInput.value = "";
+    const toast = document.createElement("div");
+    toast.className = "kc-error";
+    toast.dataset.testid = "cohort-import-error";
+    toast.textContent = `Import failed: ${err.message}`;
+    importStatus.appendChild(toast);
+  }
+});
+
+mountTour("cohort", [
+  {
+    title: "Start with the cohort's pulse.",
+    body: "One chart, one sentence. If the week is steady you'll know in five seconds — no dashboard spelunking.",
+  },
+  {
+    title: "Triage names the 2–3 who need you.",
+    body: "Statuses are words, not scores — \"Needs check-in\", with the reason in plain English and a one-click path to the student.",
+  },
+  {
+    title: "Prayer rhythm shows counts, never content.",
+    body: "You see how much the cohort is praying and weighing, not what anyone prayed. Content stays inside the circle each student chose.",
+  },
+]);
 
 const STATUS_PRIORITY = { [STATUS.AT_RISK]: 0, [STATUS.CHECK_IN]: 1, [STATUS.STEADY]: 2, [STATUS.THRIVING]: 3 };
 
@@ -261,6 +310,36 @@ async function init() {
   renderSnippet(scored);
 }
 
+// Weekly pulse note (C5): one LLM-composed paragraph from counts-only
+// aggregates. Additive — the stats sentence above renders instantly; this
+// lands when the model answers, and stays hidden on failure.
+async function renderPulseNote() {
+  const el = document.querySelector("[data-testid='cohort-pulse-note']");
+  if (!el) return;
+  try {
+    const res = await fetch(`/api/cohorts/${DEMO_DIRECTOR.cohort_id}/pulse-note`);
+    if (!res.ok) return;
+    const note = (await res.json()).note;
+    if (!note) return;
+    el.textContent = note;
+    el.hidden = false;
+  } catch { /* enhancement only */ }
+}
+
+// Shared journey line (C4).
+async function renderJourneyLine() {
+  const el = document.querySelector("[data-testid='cohort-journey-line']");
+  if (!el) return;
+  try {
+    const j = await (await fetch("/api/journey")).json();
+    if (j.completed || j.upcoming) return;
+    el.textContent = `${j.name}: the cohort is on day ${j.day} of ${j.total_days}.`;
+    el.hidden = false;
+  } catch { /* enhancement only */ }
+}
+
 init();
 renderPrayerRhythm();
 initTraditionToggle();
+renderPulseNote();
+renderJourneyLine();

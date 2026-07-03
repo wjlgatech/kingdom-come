@@ -134,6 +134,67 @@ PROFILE_FIXTURES: dict[str, dict[str, Any]] = {
 }
 
 
+# Snapshot of the shipped roster so tests (and a bad import) can restore it.
+_DEFAULT_COHORT: list[dict[str, Any]] = deepcopy(COHORT)
+
+CSV_COLUMNS = ("id", "name", "engagement", "reflection_count", "calling")
+
+
+def import_cohort_csv(cohort_id: str, csv_text: str) -> int:
+    """Replace the in-process roster from a CSV export (10X plan B4).
+
+    Expected header: id,name,engagement,reflection_count,calling — calling is
+    `;`-separated for multiple callings. All-or-nothing: any bad row raises
+    ValueError (with the row number) and the roster is left untouched.
+    In-process like every other store here; a restart restores the shipped
+    demo roster.
+    """
+    import csv
+    import io
+
+    if cohort_id != COHORT_ID:
+        raise KeyError(cohort_id)
+
+    reader = csv.DictReader(io.StringIO(csv_text))
+    missing = [c for c in CSV_COLUMNS if c not in (reader.fieldnames or [])]
+    if missing:
+        raise ValueError(f"missing CSV column(s): {', '.join(missing)}")
+
+    rows: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for n, raw in enumerate(reader, start=2):  # row 1 is the header
+        sid = (raw.get("id") or "").strip()
+        name = (raw.get("name") or "").strip()
+        if not sid or not name:
+            raise ValueError(f"row {n}: id and name are required")
+        if sid in seen_ids:
+            raise ValueError(f"row {n}: duplicate id {sid}")
+        seen_ids.add(sid)
+        try:
+            engagement = float(raw.get("engagement") or "")
+            reflection_count = int(raw.get("reflection_count") or "")
+        except ValueError:
+            raise ValueError(
+                f"row {n}: engagement must be a number and reflection_count an integer"
+            ) from None
+        if not 0 <= engagement <= 1:
+            raise ValueError(f"row {n}: engagement must be between 0 and 1")
+        if reflection_count < 0:
+            raise ValueError(f"row {n}: reflection_count must be zero or greater")
+        calling = [c.strip() for c in (raw.get("calling") or "").split(";") if c.strip()]
+        rows.append(_student(sid, name, engagement, reflection_count, calling))
+
+    if not rows:
+        raise ValueError("CSV has no student rows")
+    COHORT[:] = rows
+    return len(rows)
+
+
+def reset_cohort() -> None:
+    """Restore the shipped demo roster (tests call this between cases)."""
+    COHORT[:] = deepcopy(_DEFAULT_COHORT)
+
+
 def list_students(cohort_id: str | None = None) -> list[dict[str, Any]]:
     if cohort_id is None or cohort_id == COHORT_ID:
         return [deepcopy(s) for s in COHORT]

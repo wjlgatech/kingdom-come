@@ -72,5 +72,32 @@ async def get_memory(student_id: str, query: str, k: int = 5) -> list[str]:
     return [texts[i] for i in idx[0] if 0 <= i < len(texts)]
 
 
+def list_memories(student_id: str) -> list[str]:
+    """Everything the mentor remembers for a student, in insertion order."""
+    if student_id not in _store:
+        return []
+    return list(_store[student_id][1])
+
+
+async def delete_memory(student_id: str, index: int) -> bool:
+    """Forget one memory (ChatGPT-style user-controlled memory, REC-3).
+
+    FAISS IndexFlatL2 has no stable row deletion, so rebuild the index from
+    the surviving texts — memories per student are small, and the fake
+    embedder is deterministic, so a rebuild is cheap and exact.
+    """
+    if student_id not in _store:
+        return False
+    _, texts = _store[student_id]
+    if not 0 <= index < len(texts):
+        return False
+    remaining = [t for i, t in enumerate(texts) if i != index]
+    new_index = faiss.IndexFlatL2(EMBEDDING_DIM)
+    if remaining:
+        new_index.add(await embed(remaining))
+    _store[student_id] = (new_index, remaining)
+    return True
+
+
 def reset() -> None:
     _store.clear()

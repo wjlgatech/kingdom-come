@@ -273,6 +273,20 @@ function prayerCard(p) {
   }
   card.appendChild(meta);
 
+  if (p.answer) {
+    // The answered arc: the petition's whole journey in one line.
+    const arc = document.createElement("p");
+    arc.className = "answered-arc";
+    if (p.status === "answered_yes") arc.classList.add("answered-arc-favorable");
+    arc.dataset.testid = "prayer-answered-arc";
+    const carried = (p.intercessions ?? []).length;
+    const bits = [`Asked ${dateOf(p.created_at)}`];
+    if (carried > 0) bits.push(`Carried by ${carried} peer${carried === 1 ? "" : "s"}`);
+    bits.push(`${PRAYER_STATUS[p.status]?.label ?? p.status} ${dateOf(p.answer.answered_at)}`);
+    arc.textContent = bits.join(" · ");
+    card.appendChild(arc);
+  }
+
   if (p.answer?.testimony) {
     const quote = document.createElement("blockquote");
     quote.className = "ledger-quote";
@@ -460,12 +474,18 @@ function openAnswerModal(p) {
     </div>
     `,
     async (form) => {
+      const status = form.status.value;
       await sendJSON(`/api/prayer/requests/${p.id}/answer`, {
-        status: form.status.value,
+        status,
         testimony: form.testimony.value.trim(),
       });
       await loadPrayers();
       renderTrackRecord();
+      if (status === "answered_yes") {
+        // One quiet reveal on the freshly answered card (collapses to
+        // instant under prefers-reduced-motion via components.css).
+        document.querySelector(`[data-prayer-id="${p.id}"]`)?.classList.add("answered-moment");
+      }
     },
   );
 }

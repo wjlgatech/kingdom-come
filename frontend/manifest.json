@@ -1,0 +1,17 @@
+{
+  "name": "Kingdom Come",
+  "short_name": "KC",
+  "description": "Predictive formation intelligence — mentor, prayer ledger, cohort triage.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF7F2",
+  "theme_color": "#7C2D3A",
+  "icons": [
+    {
+      "src": "/static/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

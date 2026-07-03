@@ -7,7 +7,7 @@ from typing import Any
 _client = None
 
 
-def _get_client():
+def _get_client() -> Any:
     global _client
     if _client is not None:
         return _client

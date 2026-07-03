@@ -16,6 +16,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def init_db() -> None:
+    import backend.models.ledger  # noqa: F401
     import backend.models.outcome  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
