@@ -1,0 +1,70 @@
+{% extends "_base.html" %}
+{% block title %}Grading — Kingdom Come{% endblock %}
+{% block stylesheet %}<link rel="stylesheet" href="/static/grading.css" />{% endblock %}
+{% block main_class %}grading-main{% endblock %}
+{% block main %}
+<script>document.body.dataset.role = "director";</script>
+
+<section class="grading-header">
+  <h1 class="grading-headline">期末报告批改 <em>· drafts await your judgment</em></h1>
+  <div class="grading-toolbar">
+    <span class="grading-progress" data-testid="grading-progress">—</span>
+    <a class="btn btn-quiet" href="/api/grading/export.csv" data-testid="grading-export">Export gradebook CSV</a>
+  </div>
+</section>
+
+<section class="grading-layout">
+  <aside class="draft-list" aria-label="Draft queue" data-testid="draft-list" aria-busy="true">
+    <!-- rows injected by grading.js -->
+  </aside>
+
+  <section class="draft-detail" data-testid="draft-detail" hidden>
+    <header class="detail-header">
+      <h2 class="detail-student" data-testid="detail-student"></h2>
+      <span class="status-chip" data-testid="detail-status"></span>
+    </header>
+    <div class="detail-flags" data-testid="detail-flags" hidden></div>
+
+    <div class="detail-columns">
+      <article class="report-pane" aria-label="Student report">
+        <h3>学生报告</h3>
+        <div class="report-text" data-testid="report-text"></div>
+      </article>
+
+      <article class="comment-pane" aria-label="Draft comment">
+        <h3>评语草稿 <span class="pane-hint">编辑后保存；定稿前学生看不到任何内容</span></h3>
+        <label class="grade-row">分数
+          <input type="number" min="0" max="100" class="grade-input" data-testid="grade-input" />
+        </label>
+        <textarea class="comment-editor" data-testid="comment-editor" rows="16"></textarea>
+        <details class="rationale-box">
+          <summary>批改依据（仅教授可见）</summary>
+          <div class="rationale-text" data-testid="rationale-text"></div>
+        </details>
+
+        <div class="action-row">
+          <button class="btn" data-testid="save-btn">保存修改</button>
+          <button class="btn btn-accent" data-testid="finalize-btn">✓ 定稿</button>
+          <button class="btn btn-quiet" data-testid="reopen-btn" hidden>重新打开</button>
+        </div>
+
+        <div class="regen-row">
+          <input type="text" class="regen-input" data-testid="regen-input"
+                 placeholder="给 AI 的修改指示，例如：多肯定他的禁食操练，评语再短一点" />
+          <button class="btn" data-testid="regen-btn">按指示重写</button>
+        </div>
+        <p class="status-line" data-testid="status-line" role="status"></p>
+      </article>
+    </div>
+  </section>
+
+  <section class="empty-state" data-testid="empty-state" hidden>
+    <p>还没有草稿。先在终端运行批量起草：</p>
+    <pre>python -m backend.grading.batch --reports grading_data/reports --out grading_data/drafts</pre>
+  </section>
+</section>
+{% endblock %}
+
+{% block script %}
+<script type="module" src="/static/grading.js"></script>
+{% endblock %}

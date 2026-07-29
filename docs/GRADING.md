@@ -1,4 +1,4 @@
-# AI-Assisted Report Grading (M1: grading engine)
+# AI-Assisted Report Grading (M1 engine + M2 review surface)
 
 Drafts grades and pastoral comments for 《属灵操练练习》 reports in 陈老师's own
 voice, learned from his past comment corpus. **Every output is a draft** — the
@@ -53,6 +53,31 @@ Each draft JSON carries: `grade`, `comment` (student-facing after review),
 missing sections, too short; **flags route to human attention, never to
 automatic penalties**), and `needs_attention`.
 
+## M2: the review surface (`/cohort/grading`)
+
+The professor's desk, in the webapp. Start the app with the grading data dir
+(default `./grading_data`, override with `KC_GRADING_DIR`):
+
+```
+grading_data/
+  reports/   student submissions (what batch.py reads)
+  drafts/    draft JSONs (what batch.py writes — the webapp manages these)
+```
+
+The page shows the draft queue (status + attention chips), the report and the
+comment side-by-side, inline editing, and three agentic actions:
+
+- **按指示重写 (regenerate with guidance)** — the professor writes an
+  instruction in their own words ("多肯定他的禁食操练，评语再短一点") and the
+  agent redrafts under it. `POST /api/grading/drafts/{id}/regenerate`.
+- **定稿 (finalize)** — THE human gate. Finalized drafts are locked (edits and
+  regeneration refuse with 409) until reopened.
+- **Export gradebook CSV** — finalized rows only; unreviewed drafts never
+  leave the system.
+
+The LLM survival chain (free-llm rule): `ANTHROPIC_API_KEY` (claude-opus-5,
+preferred) → `NVIDIA_API_KEY` (free NIM tier, gpt-oss-120b) → `OPENAI_API_KEY`.
+
 ## Eval harness — honest limitation
 
 The 2023 corpus contains comments only (not the reports they answered), so
@@ -63,8 +88,7 @@ professor finalizes with only minor edits** (tracked in the M2 review surface).
 
 ## Roadmap
 
-- **M2** — review surface in the kingdom-come web UI: report + draft
-  side-by-side, edit, finalize; export comment docs + gradebook CSV.
+- ~~**M2** — review surface~~ shipped: `/cohort/grading` (this doc, above).
 - **M3** — cohort synthesis: demand/supply analysis of formation needs,
   advice for future teaching/counseling, signals into the formation platform.
 - **M4** — intake portal (upload, filename/format validation, receipts,

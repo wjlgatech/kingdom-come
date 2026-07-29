@@ -1,12 +1,21 @@
-"""Cloud LLM seam for grading (cloud-with-consent posture).
+"""Grading LLM seam — survival chain, ordered for CORRECTNESS first.
 
-Provider order: Anthropic (claude-opus-5 — strongest Chinese pastoral register)
-if ANTHROPIC_API_KEY is set, else OpenAI (the repo's existing provider). Tests
-set GRADING_FAKE_RESPONSE and never touch the network.
+Grading is not chat: comments are 8000-char-report Chinese pastoral prose in a
+specific voice, and a wrong register is worse than a slow answer. So unlike
+the mentor chain (backend/services/llm_client.py — availability-first), this
+chain leads with the strongest model and falls back to free tiers:
 
-Reports are confessional documents: they leave the machine ONLY through this
-call, only with student consent collected via the assignment instructions
-(docs/GRADING.md), and API-tier requests are not used for model training.
+  1. Anthropic claude-opus-5 (ANTHROPIC_API_KEY) — best Chinese pastoral register
+  2. NVIDIA NIM free tier   (NVIDIA_API_KEY)     — gpt-oss-120b, verified live
+     by the mentor chain 2026-06-10 (kimi leaks reasoning into content, glm
+     ~35s to first token — both rejected there; same defaults inherited here)
+  3. OpenAI                 (OPENAI_API_KEY)
+
+No Ollama tier: a 7b local model can't hold this register, and cloud-with-
+consent is the agreed posture (docs/GRADING.md). GRADING_FAKE_RESPONSE
+short-circuits everything (tests). Reports are confessional documents: they
+leave the machine only through this call, with student consent, and API-tier
+requests are not used for provider training.
 """
 
 from __future__ import annotations
@@ -14,22 +23,54 @@ from __future__ import annotations
 import os
 
 ANTHROPIC_MODEL = os.getenv("GRADING_ANTHROPIC_MODEL", "claude-opus-5")
+NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
+NVIDIA_MODEL = os.getenv("GRADING_NIM_MODEL", "openai/gpt-oss-120b")
 OPENAI_MODEL = os.getenv("GRADING_OPENAI_MODEL", "gpt-4o")
 MAX_TOKENS = 4096
+
+
+def resolve_chain() -> list[str]:
+    """Names of the tiers available in this environment, in call order."""
+    chain = []
+    if os.getenv("ANTHROPIC_API_KEY"):
+        chain.append("anthropic")
+    if os.getenv("NVIDIA_API_KEY"):
+        chain.append("nvidia")
+    if os.getenv("OPENAI_API_KEY"):
+        chain.append("openai")
+    return chain
 
 
 def complete(system: str, user: str) -> str:
     fake = os.getenv("GRADING_FAKE_RESPONSE")
     if fake is not None:
         return fake
-    if os.getenv("ANTHROPIC_API_KEY"):
-        return _complete_anthropic(system, user)
-    if os.getenv("OPENAI_API_KEY"):
-        return _complete_openai(system, user)
-    raise RuntimeError(
-        "No LLM credentials: set ANTHROPIC_API_KEY (preferred) or OPENAI_API_KEY. "
-        "Tests may set GRADING_FAKE_RESPONSE instead."
-    )
+
+    chain = resolve_chain()
+    if not chain:
+        raise RuntimeError(
+            "No LLM credentials: set ANTHROPIC_API_KEY (preferred), NVIDIA_API_KEY "
+            "(free tier — build.nvidia.com), or OPENAI_API_KEY. "
+            "Tests may set GRADING_FAKE_RESPONSE instead."
+        )
+
+    errors: list[str] = []
+    for tier in chain:
+        try:
+            if tier == "anthropic":
+                return _complete_anthropic(system, user)
+            if tier == "nvidia":
+                return _complete_openai_protocol(
+                    system, user, base_url=NVIDIA_BASE_URL,
+                    api_key=os.environ["NVIDIA_API_KEY"], model=NVIDIA_MODEL,
+                )
+            return _complete_openai_protocol(
+                system, user, base_url=None,
+                api_key=os.environ["OPENAI_API_KEY"], model=OPENAI_MODEL,
+            )
+        except Exception as exc:  # noqa: BLE001 — any tier failure advances the chain
+            errors.append(f"{tier}: {exc}")
+    raise RuntimeError("all LLM tiers failed — " + " | ".join(errors))
 
 
 def _complete_anthropic(system: str, user: str) -> str:
@@ -50,12 +91,15 @@ def _complete_anthropic(system: str, user: str) -> str:
     return text
 
 
-def _complete_openai(system: str, user: str) -> str:
+def _complete_openai_protocol(
+    system: str, user: str, *, base_url: str | None, api_key: str, model: str
+) -> str:
     from openai import OpenAI
 
-    client = OpenAI()
+    client = OpenAI(base_url=base_url, api_key=api_key, max_retries=0)
     response = client.chat.completions.create(
-        model=OPENAI_MODEL,
+        model=model,
+        max_tokens=MAX_TOKENS,
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": user},

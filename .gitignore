@@ -14,3 +14,4 @@ build/
 
 # Professor comment corpus — private, never commit
 backend/grading/data/corpus/
+grading_data/

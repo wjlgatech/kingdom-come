@@ -1,0 +1,63 @@
+/* Grading review surface — professor's desk. Uses tokens.css exclusively:
+   no hardcoded hexes, so the design system owns every color. */
+
+.grading-main { max-width: 1200px; margin: 0 auto; padding: var(--space-24); }
+
+.grading-header { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-16); justify-content: space-between; margin-bottom: var(--space-24); }
+.grading-headline { font-family: var(--serif-display); font-size: var(--text-2xl); color: var(--ink); margin: 0; }
+.grading-headline em { color: var(--ink-faint); font-size: var(--text-lg); }
+.grading-toolbar { display: flex; align-items: center; gap: var(--space-16); }
+.grading-progress { color: var(--ink-muted); font-size: var(--text-sm); }
+
+.grading-layout { display: grid; grid-template-columns: 280px 1fr; gap: var(--space-24); align-items: start; }
+@media (max-width: 900px) { .grading-layout { grid-template-columns: 1fr; } }
+
+/* Draft queue */
+.draft-list { display: flex; flex-direction: column; gap: var(--space-8); }
+.draft-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); padding: var(--space-12) var(--space-16); background: var(--surface); border: 1px solid var(--hairline); border-radius: 10px; cursor: pointer; text-align: left; width: 100%; font: inherit; color: var(--ink); }
+.draft-row:hover { border-color: var(--ink-faint); }
+.draft-row.selected { border-color: var(--accent); background: var(--accent-soft); }
+.draft-row .row-student { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.draft-row .row-meta { display: flex; align-items: center; gap: var(--space-8); flex-shrink: 0; }
+.row-grade { font-family: var(--mono); font-size: var(--text-sm); color: var(--ink-muted); }
+
+.status-chip { font-size: var(--text-xs); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.status-chip.draft { background: var(--status-checkin-soft); color: var(--status-checkin); }
+.status-chip.final { background: var(--status-thriving-soft); color: var(--status-thriving); }
+.status-chip.attention { background: var(--status-risk-soft); color: var(--status-risk); }
+
+/* Detail */
+.draft-detail { background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px; padding: var(--space-24); }
+.detail-header { display: flex; align-items: center; gap: var(--space-12); margin-bottom: var(--space-12); }
+.detail-student { font-family: var(--serif-display); font-size: var(--text-xl); margin: 0; color: var(--ink); }
+.detail-flags { background: var(--status-risk-soft); color: var(--status-risk); border-radius: 8px; padding: var(--space-8) var(--space-12); font-size: var(--text-sm); margin-bottom: var(--space-12); }
+
+.detail-columns { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-24); }
+@media (max-width: 1000px) { .detail-columns { grid-template-columns: 1fr; } }
+.detail-columns h3 { font-size: var(--text-sm); color: var(--ink-muted); text-transform: none; margin: 0 0 var(--space-8); }
+.pane-hint { font-weight: 400; color: var(--ink-faint); font-size: var(--text-xs); }
+
+.report-text { font-family: var(--serif-body); white-space: pre-wrap; line-height: 1.8; max-height: 60vh; overflow-y: auto; background: var(--surface-2); border-radius: 8px; padding: var(--space-16); color: var(--ink); }
+
+.grade-row { display: flex; align-items: center; gap: var(--space-8); font-size: var(--text-sm); color: var(--ink-muted); margin-bottom: var(--space-8); }
+.grade-input { width: 5rem; font-family: var(--mono); font-size: var(--text-lg); padding: var(--space-4) var(--space-8); border: 1px solid var(--hairline); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.comment-editor { width: 100%; font-family: var(--serif-body); font-size: var(--text-base); line-height: 1.8; padding: var(--space-16); border: 1px solid var(--hairline); border-radius: 8px; background: var(--surface); color: var(--ink); resize: vertical; box-sizing: border-box; }
+.comment-editor:disabled, .grade-input:disabled { background: var(--surface-2); color: var(--ink-muted); }
+
+.rationale-box { margin-top: var(--space-12); font-size: var(--text-sm); color: var(--ink-muted); }
+.rationale-box summary { cursor: pointer; }
+.rationale-text { white-space: pre-wrap; padding: var(--space-12); background: var(--surface-2); border-radius: 8px; margin-top: var(--space-8); }
+
+.action-row { display: flex; gap: var(--space-12); margin-top: var(--space-16); }
+.btn { font: inherit; font-size: var(--text-sm); padding: var(--space-8) var(--space-16); border-radius: 8px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); cursor: pointer; text-decoration: none; }
+.btn:hover { border-color: var(--ink-faint); }
+.btn-accent { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn-quiet { background: transparent; color: var(--ink-muted); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.regen-row { display: flex; gap: var(--space-8); margin-top: var(--space-16); }
+.regen-input { flex: 1; font: inherit; font-size: var(--text-sm); padding: var(--space-8) var(--space-12); border: 1px solid var(--hairline); border-radius: 8px; background: var(--surface); color: var(--ink); }
+
+.status-line { min-height: 1.2em; font-size: var(--text-sm); color: var(--ink-muted); margin: var(--space-12) 0 0; }
+.empty-state { color: var(--ink-muted); }
+.empty-state pre { background: var(--surface-2); padding: var(--space-12); border-radius: 8px; overflow-x: auto; }

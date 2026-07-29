@@ -70,6 +70,7 @@ def draft_grade(
     profile: dict | None = None,
     exemplars: list[str] | None = None,
     llm: Callable[[str, str], str] | None = None,
+    guidance: str | None = None,
 ) -> DraftGrade:
     llm = llm or complete
     profile = profile or load_voice_profile()
@@ -78,6 +79,8 @@ def draft_grade(
 
     system = build_system_prompt(profile, exemplars)
     user_parts = [f"学生姓名：{student}"]
+    if guidance:
+        user_parts.append(f"陈老师对这份草稿的修改指示（必须遵循）：{guidance}")
     if flags:
         user_parts.append("结构检查提示（写进 rationale，不要因此在评语中责备学生）：" + "；".join(describe_flags(flags)))
     user_parts.append(f"\n报告全文：\n{report_text}")

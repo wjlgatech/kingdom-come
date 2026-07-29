@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
+from backend.api.grading import router as grading_router
 from backend.api.ws_chat import router as ws_chat_router
 from backend.fixtures import cohort as cohort_fixtures
 from backend.services import journey as journey_service
@@ -31,6 +32,7 @@ if not FRONTEND_DIR.is_dir():
 
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 app.include_router(ws_chat_router)
+app.include_router(grading_router)
 
 # Opt-in write-through persistence for the ledgers (KC_PERSIST=1): creates
 # the tables (init_db stays opt-in) and replays persisted records into the
@@ -61,6 +63,7 @@ DIRECTOR_SUBNAV = [
     {"href": "/cohort", "label": "Cohort", "key": "cohort"},
     {"href": "/cohort/triage", "label": "Triage", "key": "triage"},
     {"href": "/cohort/groups", "label": "Groups", "key": "groups"},
+    {"href": "/cohort/grading", "label": "Grading", "key": "grading"},
 ]
 
 
@@ -164,6 +167,13 @@ def cohort_groups_page(request: Request) -> HTMLResponse:
         request,
         "cohort_groups.html",
         {"subnav": _director_subnav("groups"), "required_role": "director"},
+    )
+
+
+@app.get("/cohort/grading", include_in_schema=False)
+def grading_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request, "grading.html", {"subnav": _director_subnav("grading")}
     )
 
 

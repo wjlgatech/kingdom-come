@@ -164,3 +164,39 @@ class TestJudge:
         result = judge_voice_fidelity("草稿", ["范例"])
         assert result["mean"] == pytest.approx(23 / 25)
         assert result["verdict"] == "接近真迹"
+
+
+class TestLLMChain:
+    def test_chain_order_quality_first(self, monkeypatch):
+        from backend.grading.llm import resolve_chain
+
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "x")
+        monkeypatch.setenv("NVIDIA_API_KEY", "x")
+        monkeypatch.setenv("OPENAI_API_KEY", "x")
+        assert resolve_chain() == ["anthropic", "nvidia", "openai"]
+
+    def test_no_keys_raises_helpful_error(self, monkeypatch):
+        from backend.grading.llm import complete
+
+        for var in ("GRADING_FAKE_RESPONSE", "ANTHROPIC_API_KEY", "NVIDIA_API_KEY", "OPENAI_API_KEY"):
+            monkeypatch.delenv(var, raising=False)
+        with pytest.raises(RuntimeError, match="build.nvidia.com"):
+            complete("s", "u")
+
+    def test_tier_failure_advances_chain(self, monkeypatch):
+        import backend.grading.llm as llm_mod
+
+        monkeypatch.delenv("GRADING_FAKE_RESPONSE", raising=False)
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "x")
+        monkeypatch.setenv("NVIDIA_API_KEY", "x")
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+        def anthropic_down(system, user):
+            raise RuntimeError("anthropic 529")
+
+        monkeypatch.setattr(llm_mod, "_complete_anthropic", anthropic_down)
+        monkeypatch.setattr(
+            llm_mod, "_complete_openai_protocol",
+            lambda system, user, *, base_url, api_key, model: f"nim:{model}",
+        )
+        assert llm_mod.complete("s", "u").startswith("nim:")
