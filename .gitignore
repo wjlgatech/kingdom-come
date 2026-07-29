@@ -11,4 +11,6 @@ output/
 design-preview.html
 *.egg-info/
 build/
-*.egg-info/
+
+# Professor comment corpus — private, never commit
+backend/grading/data/corpus/

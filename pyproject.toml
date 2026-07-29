@@ -16,6 +16,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# AI-assisted report grading (docs/GRADING.md): Anthropic provider + PDF extraction.
+grading = ["anthropic>=0.40", "pypdf>=5"]
 dev = [
     "fakeredis>=2.20",
     "httpx>=0.27",
