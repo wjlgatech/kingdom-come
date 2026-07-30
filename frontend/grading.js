@@ -138,6 +138,47 @@ function guard(fn) {
   return () => fn().catch((e) => setStatus(e.message, true));
 }
 
+// --- M3: cohort synthesis panel ---
+
+function renderSynthesis(s) {
+  $('[data-testid="synthesis-body"]').hidden = false;
+  const counts = $('[data-testid="synthesis-counts"]');
+  counts.innerHTML = "";
+  const blocks = [
+    ["操练供给", s.aggregate.discipline_supply],
+    ["需求信号", s.aggregate.need_demand],
+    ["挣扎主题", s.aggregate.struggle_themes],
+  ];
+  for (const [label, dict] of blocks) {
+    const div = document.createElement("div");
+    div.className = "count-block";
+    const entries = Object.entries(dict).slice(0, 8)
+      .map(([k, v]) => `${k} ×${v}`).join("、") || "—";
+    div.innerHTML = `<strong></strong>`;
+    div.querySelector("strong").textContent = `${label}（${s.aggregate.students} 人）：`;
+    div.appendChild(document.createTextNode(entries));
+    counts.appendChild(div);
+  }
+  $('[data-testid="synthesis-advisory"]').textContent = s.advisory;
+}
+
+async function runSynthesis() {
+  const status = $('[data-testid="synthesis-status"]');
+  status.textContent = "AI 正在汇总已定稿的报告……（人数多时需要几分钟）";
+  $('[data-testid="synthesis-btn"]').disabled = true;
+  try {
+    renderSynthesis(await api("/synthesis", { method: "POST" }));
+    status.textContent = "";
+  } catch (e) {
+    status.textContent = e.message;
+  } finally {
+    $('[data-testid="synthesis-btn"]').disabled = false;
+  }
+}
+
+$('[data-testid="synthesis-btn"]').addEventListener("click", runSynthesis);
+api("/synthesis").then(renderSynthesis).catch(() => {}); // show last run if any
+
 $('[data-testid="save-btn"]').addEventListener("click", guard(saveEdits));
 $('[data-testid="finalize-btn"]').addEventListener("click", guard(finalize));
 $('[data-testid="reopen-btn"]').addEventListener("click", guard(reopen));

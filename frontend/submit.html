@@ -1,0 +1,36 @@
+{% extends "_base.html" %}
+{% block title %}提交报告 — Kingdom Come{% endblock %}
+{% block stylesheet %}<link rel="stylesheet" href="/static/submit.css" />{% endblock %}
+{% block main_class %}submit-main{% endblock %}
+{% block main %}
+<section class="submit-card">
+  <h1 class="submit-headline">期末报告提交<br /><em>《属灵操练练习》报告</em></h1>
+  <p class="deadline-line" data-testid="deadline-line">截止时间：2026年08月17日（星期一）23:59</p>
+
+  <ol class="submit-rules">
+    <li>PDF 格式，约 10 页（8000 字左右）</li>
+    <li>文件名：<strong>姓名_《属灵操练的练习》报告.pdf</strong>（例如 Zhang baoluo_《属灵操练的练习》报告.pdf）</li>
+  </ol>
+
+  <div class="consent-box">
+    <p>本课程在陈老师的监督下使用 AI 辅助批改：报告内容会通过加密渠道发送给云端 AI 服务，仅用于生成初步评语草稿；不会用于 AI 模型训练；<strong>最终分数与评语均由陈老师亲自审定</strong>。</p>
+    <label class="consent-row">
+      <input type="checkbox" data-testid="consent-check" />
+      我同意上述 AI 辅助批改方式
+    </label>
+    <p class="consent-note">如不勾选仍可提交，陈老师将全程手工批改，不影响成绩。</p>
+  </div>
+
+  <form class="submit-form" data-testid="submit-form">
+    <input type="file" accept=".pdf" data-testid="file-input" />
+    <button type="submit" class="btn btn-accent" data-testid="submit-btn">提交报告</button>
+  </form>
+
+  <div class="receipt" data-testid="receipt" hidden></div>
+  <p class="status-line" data-testid="status-line" role="status"></p>
+</section>
+{% endblock %}
+
+{% block script %}
+<script type="module" src="/static/submit.js"></script>
+{% endblock %}

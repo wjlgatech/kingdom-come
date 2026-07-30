@@ -7,11 +7,11 @@ guidance in their own words and the agent redrafts under it.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel
 
-from backend.grading import store
+from backend.grading import intake, store, synthesis
 from backend.grading.corpus import load_corpus
 from backend.grading.grader import draft_grade, load_voice_profile
 
@@ -98,6 +98,43 @@ def regenerate(draft_id: str, req: RegenerateRequest) -> dict:
     store.save_draft(draft_id, data)
     data["id"] = draft_id
     return data
+
+
+@router.post("/synthesis")
+def run_synthesis() -> dict:
+    """M3: finalized reports -> formation signals -> demand/supply advisory."""
+    try:
+        return synthesis.run_synthesis()
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"synthesis failed: {exc}")
+
+
+@router.get("/synthesis")
+def get_synthesis() -> dict:
+    result = synthesis.latest_synthesis()
+    if result is None:
+        raise HTTPException(status_code=404, detail="no synthesis yet — run one first")
+    return result
+
+
+@router.post("/submissions")
+async def submit_report(
+    file: UploadFile = File(...), consent: str = Form("")
+) -> dict:
+    """M4: student upload. Consent is explicit; opt-outs are accepted and
+    marked for manual grading (never silently AI-processed)."""
+    content = await file.read()
+    try:
+        return intake.save_submission(file.filename or "", content, consent == "yes")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+
+@router.get("/submissions")
+def submissions() -> dict:
+    return {"submissions": intake.list_submissions(), "deadline": intake.deadline().isoformat()}
 
 
 @router.get("/export.csv")

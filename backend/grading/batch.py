@@ -27,11 +27,17 @@ def run_batch(reports_dir: Path, out_dir: Path, corpus_path: Path | None = None)
         "total": len(files),
         "drafted": 0,
         "needs_attention": [],
+        "optouts": [],
         "errors": {},
         "exemplars_used": len(exemplars),
     }
     for path in files:
         student = parse_student_name(path)
+        if (reports_dir / f"{path.stem}.optout").exists():
+            # Student declined AI-assisted grading (docs/GRADING.md): honor it.
+            summary["optouts"].append(student)
+            print(f"  ○ {student}: 学生选择手工批改，已跳过")
+            continue
         try:
             text = extract_text(path)
             draft = draft_grade(student, text, profile=profile, exemplars=exemplars)

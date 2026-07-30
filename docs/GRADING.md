@@ -1,4 +1,4 @@
-# AI-Assisted Report Grading (M1 engine + M2 review surface)
+# AI-Assisted Report Grading (M1 engine · M2 review · M3 synthesis · M4 intake)
 
 Drafts grades and pastoral comments for 《属灵操练练习》 reports in 陈老师's own
 voice, learned from his past comment corpus. **Every output is a draft** — the
@@ -78,6 +78,40 @@ comment side-by-side, inline editing, and three agentic actions:
 The LLM survival chain (free-llm rule): `ANTHROPIC_API_KEY` (claude-opus-5,
 preferred) → `NVIDIA_API_KEY` (free NIM tier, gpt-oss-120b) → `OPENAI_API_KEY`.
 
+## M3: cohort synthesis (班级属灵光景与教学建议)
+
+The formation-intelligence payoff. On the grading page, 生成洞察报告 runs:
+
+1. **Signal extraction** (LLM, cached per draft) — disciplines practiced,
+   struggles, breakthroughs, needs, retreat shape, readiness to lead others.
+   **Finalized drafts only**: unreviewed data never feeds analytics.
+2. **Aggregation** (pure Python, auditable) — discipline supply counts vs
+   need demand counts vs struggle themes.
+3. **Advisory** (LLM) — 供给面 / 需求面 / 下学期教学建议 / 关怀跟进方向,
+   grounded only in the aggregate.
+
+API: `POST /api/grading/synthesis` (runs), `GET` (last run). Output persists
+at `grading_data/synthesis.json`.
+
+## M4: student intake portal (`/submit`)
+
+Students upload their PDF at `/submit` — no login, share the link. The page
+carries the consent notice; **opt-out is a first-class path**: the upload is
+accepted, marked with a `.optout` file, skipped by the batch run, and listed
+for manual grading. Validation is student-friendly: non-PDF and oversized
+files are rejected with Chinese error messages; a wrong filename or a late
+submission (deadline via `KC_GRADING_DEADLINE`, default 2026-08-17 23:59
+US Eastern) is a warning on the receipt, never a lockout. Resubmission
+replaces the previous file and says so.
+
+## Local-model option (full-privacy mode)
+
+`GRADING_ALLOW_OLLAMA=1` adds a local Ollama tier (`GRADING_OLLAMA_MODEL`,
+default `qwen2.5:14b`) to the LLM chain. With no cloud keys set, the whole
+pipeline runs offline — reports never leave the machine. It sits last when
+cloud keys exist: local models can't reliably hold the pastoral register, so
+full-local is a deliberate privacy/quality trade the professor opts into.
+
 ## Eval harness — honest limitation
 
 The 2023 corpus contains comments only (not the reports they answered), so
@@ -88,8 +122,8 @@ professor finalizes with only minor edits** (tracked in the M2 review surface).
 
 ## Roadmap
 
-- ~~**M2** — review surface~~ shipped: `/cohort/grading` (this doc, above).
-- **M3** — cohort synthesis: demand/supply analysis of formation needs,
-  advice for future teaching/counseling, signals into the formation platform.
-- **M4** — intake portal (upload, filename/format validation, receipts,
-  deadline tracking) + local-model option.
+All four milestones shipped: M1 engine, M2 review (`/cohort/grading`),
+M3 synthesis, M4 intake (`/submit`) + local-model option. Next: pilot with
+real reports and track the operational metric (% of drafts finalized with
+only minor edits); connect synthesis signals to the platform's longitudinal
+formation analytics.

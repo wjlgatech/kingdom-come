@@ -1,0 +1,25 @@
+/* Student submission portal — tokens.css only, no hardcoded colors. */
+
+.submit-main { max-width: 640px; margin: 0 auto; padding: var(--space-32) var(--space-24); }
+.submit-card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px; padding: var(--space-32); }
+.submit-headline { font-family: var(--serif-display); font-size: var(--text-2xl); color: var(--ink); margin: 0 0 var(--space-8); line-height: 1.3; }
+.submit-headline em { color: var(--ink-faint); font-size: var(--text-lg); }
+.deadline-line { color: var(--status-checkin); font-weight: 600; margin: 0 0 var(--space-16); }
+.deadline-line.late { color: var(--status-risk); }
+
+.submit-rules { color: var(--ink-muted); font-size: var(--text-sm); line-height: 1.9; padding-left: 1.2em; margin: 0 0 var(--space-24); }
+
+.consent-box { background: var(--surface-2); border-radius: 10px; padding: var(--space-16); font-size: var(--text-sm); color: var(--ink-muted); line-height: 1.8; margin-bottom: var(--space-24); }
+.consent-box p { margin: 0 0 var(--space-8); }
+.consent-row { display: flex; gap: var(--space-8); align-items: baseline; color: var(--ink); font-weight: 600; cursor: pointer; }
+.consent-note { font-size: var(--text-xs); color: var(--ink-faint); margin-top: var(--space-8); }
+
+.submit-form { display: flex; gap: var(--space-12); align-items: center; flex-wrap: wrap; }
+.submit-form input[type="file"] { flex: 1; font-size: var(--text-sm); color: var(--ink-muted); min-width: 240px; }
+.btn { font: inherit; font-size: var(--text-sm); padding: var(--space-8) var(--space-24); border-radius: 8px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); cursor: pointer; }
+.btn-accent { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.receipt { margin-top: var(--space-24); background: var(--status-thriving-soft); color: var(--status-thriving); border-radius: 10px; padding: var(--space-16); font-size: var(--text-sm); line-height: 1.8; }
+.receipt .receipt-warning { display: block; color: var(--status-checkin); margin-top: var(--space-8); }
+.status-line { min-height: 1.2em; font-size: var(--text-sm); color: var(--status-risk); margin: var(--space-12) 0 0; }

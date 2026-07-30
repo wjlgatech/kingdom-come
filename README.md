@@ -34,7 +34,7 @@ What you get on day one:
 - **Prayer + prophecy ledgers** with track records that can persist across restarts (`KC_PERSIST=1`).
 - **The Formation Year** (`/me/year`) — a student's whole year assembled as one editorial page.
 - **CSV roster import**, a shared 40-day journey, installable PWA, first-run tours.
-- **AI-assisted report grading** that drafts grades and pastoral comments in the professor's own voice — human-finalized, consent-first, structural issues flagged never auto-penalized ([docs/GRADING.md](docs/GRADING.md)).
+- **AI-assisted report grading** — student intake portal (`/submit`, consent-first with an honored opt-out), drafts in the professor's own voice, a review surface where the professor edits/regenerates/finalizes every grade (`/cohort/grading`), and cohort synthesis that turns finalized reports into demand/supply teaching advice ([docs/GRADING.md](docs/GRADING.md)).
 - **A real web workbench** backed by the same JSON API your integrations can call.
 - **Unit, API, browser E2E, and axe-core accessibility tests** so contributors can move with confidence.
 

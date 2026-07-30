@@ -63,6 +63,18 @@
     <pre>python -m backend.grading.batch --reports grading_data/reports --out grading_data/drafts</pre>
   </section>
 </section>
+
+<section class="synthesis-panel" data-testid="synthesis-panel">
+  <header class="synthesis-header">
+    <h2>班级属灵光景与教学建议 <span class="pane-hint">仅依据已定稿的报告</span></h2>
+    <button class="btn" data-testid="synthesis-btn">生成洞察报告</button>
+  </header>
+  <p class="status-line" data-testid="synthesis-status" role="status"></p>
+  <div class="synthesis-body" data-testid="synthesis-body" hidden>
+    <div class="synthesis-counts" data-testid="synthesis-counts"></div>
+    <article class="synthesis-advisory" data-testid="synthesis-advisory"></article>
+  </div>
+</section>
 {% endblock %}
 
 {% block script %}

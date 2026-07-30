@@ -30,7 +30,13 @@ MAX_TOKENS = 4096
 
 
 def resolve_chain() -> list[str]:
-    """Names of the tiers available in this environment, in call order."""
+    """Names of the tiers available in this environment, in call order.
+
+    GRADING_ALLOW_OLLAMA=1 opts into a local-model tier (full-privacy mode:
+    reports never leave the machine). It is deliberately opt-in and LAST when
+    cloud keys exist — local 7-30b models can't reliably hold this register —
+    but with no cloud keys it makes the pipeline fully offline.
+    """
     chain = []
     if os.getenv("ANTHROPIC_API_KEY"):
         chain.append("anthropic")
@@ -38,6 +44,8 @@ def resolve_chain() -> list[str]:
         chain.append("nvidia")
     if os.getenv("OPENAI_API_KEY"):
         chain.append("openai")
+    if os.getenv("GRADING_ALLOW_OLLAMA") == "1":
+        chain.append("ollama")
     return chain
 
 
@@ -63,6 +71,12 @@ def complete(system: str, user: str) -> str:
                 return _complete_openai_protocol(
                     system, user, base_url=NVIDIA_BASE_URL,
                     api_key=os.environ["NVIDIA_API_KEY"], model=NVIDIA_MODEL,
+                )
+            if tier == "ollama":
+                return _complete_openai_protocol(
+                    system, user,
+                    base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1"),
+                    api_key="ollama", model=os.getenv("GRADING_OLLAMA_MODEL", "qwen2.5:14b"),
                 )
             return _complete_openai_protocol(
                 system, user, base_url=None,

@@ -177,6 +177,12 @@ def grading_page(request: Request) -> HTMLResponse:
     )
 
 
+@app.get("/submit", include_in_schema=False)
+def submit_page(request: Request) -> HTMLResponse:
+    # Student-facing: no role subnav — students land here from a shared link.
+    return templates.TemplateResponse(request, "submit.html", {"subnav": None})
+
+
 @app.get("/students/{student_id}", include_in_schema=False)
 def profile_page(request: Request, student_id: str) -> HTMLResponse:
     return templates.TemplateResponse(
