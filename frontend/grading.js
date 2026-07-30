@@ -138,6 +138,39 @@ function guard(fn) {
   return () => fn().catch((e) => setStatus(e.message, true));
 }
 
+// --- Draft-new-submissions button: the step that used to need a terminal ---
+
+async function pollBatch() {
+  const progress = $('[data-testid="grading-progress"]');
+  for (;;) {
+    const job = await api("/batch/status");
+    if (!job.running) {
+      const errs = Object.keys(job.errors || {}).length;
+      progress.textContent = `起草完成：${job.done - errs}/${job.total}` + (errs ? `（${errs} 份出错）` : "");
+      break;
+    }
+    progress.textContent = `起草中 ${job.done}/${job.total}` + (job.current ? `：${job.current}…` : "…");
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  await refreshList();
+  if (!selectedId && drafts.length) await selectDraft(drafts[0].id);
+}
+
+async function startBatch() {
+  const btn = $('[data-testid="batch-btn"]');
+  btn.disabled = true;
+  try {
+    await api("/batch", { method: "POST" });
+    await pollBatch();
+  } catch (e) {
+    $('[data-testid="grading-progress"]').textContent = e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+$('[data-testid="batch-btn"]').addEventListener("click", startBatch);
+
 // --- M3: cohort synthesis panel ---
 
 function renderSynthesis(s) {

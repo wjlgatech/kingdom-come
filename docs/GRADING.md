@@ -38,7 +38,16 @@ python -m backend.grading.corpus /tmp/comments.txt \
     --out backend/grading/data/corpus/zuxing_2023.json
 ```
 
-## Usage
+## Usage — the professor never needs a terminal
+
+The whole workflow is in the webapp: students submit at **`/submit`**, the
+professor opens **`/cohort/grading`** and clicks **起草新报告** — every new
+submission (opt-outs skipped) is drafted with live progress — then reviews,
+regenerates with guidance, finalizes, exports the CSV, and generates the
+cohort insight report. `POST /api/grading/batch` + `GET /api/grading/batch/status`
+back the button.
+
+CLI equivalents (for developers / automation):
 
 ```bash
 # Draft grades for a folder of submissions (PDF or txt)

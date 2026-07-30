@@ -154,3 +154,40 @@ class TestIntake:
         r = client.get("/submit")
         assert r.status_code == 200
         assert "submit.js" in r.text
+
+
+class TestWebBatch:
+    def test_batch_endpoint_drafts_pending_reports(self, client, tmp_path, monkeypatch):
+        import time
+
+        monkeypatch.setenv(
+            "GRADING_FAKE_RESPONSE",
+            json.dumps({"grade": 94, "comment": "c\n陈老师", "rationale": ""}, ensure_ascii=False),
+        )
+        (tmp_path / "reports" / "王明_报告.txt").write_text(REPORT, encoding="utf-8")
+        (tmp_path / "reports" / "李四_报告.txt").write_text(REPORT, encoding="utf-8")
+        (tmp_path / "reports" / "李四_报告.optout").write_text("manual", encoding="utf-8")
+
+        r = client.post("/api/grading/batch")
+        assert r.status_code == 200
+        assert r.json()["started"] == 1  # opt-out excluded
+
+        for _ in range(50):
+            if not client.get("/api/grading/batch/status").json()["running"]:
+                break
+            time.sleep(0.1)
+        status = client.get("/api/grading/batch/status").json()
+        assert status["done"] == 1 and status["errors"] == {}
+        drafts = client.get("/api/grading/drafts").json()["drafts"]
+        assert [d["student"] for d in drafts] == ["王明"]
+        assert drafts[0]["grade"] == 94
+
+    def test_batch_with_nothing_pending_is_409(self, client):
+        r = client.post("/api/grading/batch")
+        assert r.status_code == 409
+        assert "没有待起草" in r.json()["detail"]
+
+    def test_already_drafted_reports_not_redrafted(self, client, tmp_path, monkeypatch):
+        _seed_draft(tmp_path, name="王明_报告", status="draft")
+        r = client.post("/api/grading/batch")
+        assert r.status_code == 409  # the only report already has a draft

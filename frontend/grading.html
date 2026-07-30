@@ -9,6 +9,7 @@
   <h1 class="grading-headline">期末报告批改 <em>· drafts await your judgment</em></h1>
   <div class="grading-toolbar">
     <span class="grading-progress" data-testid="grading-progress">—</span>
+    <button class="btn btn-accent" data-testid="batch-btn">起草新报告</button>
     <a class="btn btn-quiet" href="/api/grading/export.csv" data-testid="grading-export">Export gradebook CSV</a>
   </div>
 </section>
@@ -59,8 +60,7 @@
   </section>
 
   <section class="empty-state" data-testid="empty-state" hidden>
-    <p>还没有草稿。先在终端运行批量起草：</p>
-    <pre>python -m backend.grading.batch --reports grading_data/reports --out grading_data/drafts</pre>
+    <p>还没有草稿。学生在 <code>/submit</code> 页面提交报告后，点击右上角的<strong>「起草新报告」</strong>，AI 就会为每份新报告起草评语。</p>
   </section>
 </section>
 

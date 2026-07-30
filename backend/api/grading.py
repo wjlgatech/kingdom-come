@@ -2,10 +2,14 @@
 
 The finalize endpoint is THE human gate: nothing is official until the
 professor clicks it. Regenerate is the agentic loop — the professor gives
-guidance in their own words and the agent redrafts under it.
+guidance in their own words and the agent redrafts under it. The batch
+endpoint makes the whole workflow CLI-free: the professor drafts new
+submissions with one button.
 """
 
 from __future__ import annotations
+
+import threading
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import Response
@@ -13,9 +17,69 @@ from pydantic import BaseModel
 
 from backend.grading import intake, store, synthesis
 from backend.grading.corpus import load_corpus
+from backend.grading.extract import SUPPORTED_SUFFIXES, extract_text, parse_student_name
 from backend.grading.grader import draft_grade, load_voice_profile
 
 router = APIRouter(prefix="/api/grading", tags=["grading"])
+
+# One drafting job at a time; state is read by the UI's polling loop. In-memory
+# is fine: this is a single-professor tool, and drafts land on disk as they finish.
+_batch_job: dict = {"running": False, "total": 0, "done": 0, "current": "", "errors": {}}
+_batch_lock = threading.Lock()
+
+
+def _pending_reports() -> list:
+    reports = store.reports_dir()
+    if not reports.is_dir():
+        return []
+    pending = []
+    for f in sorted(reports.iterdir()):
+        if f.suffix.lower() not in SUPPORTED_SUFFIXES:
+            continue
+        if (reports / f"{f.stem}.optout").exists():
+            continue  # student declined AI grading — manual path
+        if (store.drafts_dir() / f"{f.stem}.json").exists():
+            continue  # already drafted
+        pending.append(f)
+    return pending
+
+
+def _run_batch_job(files: list) -> None:
+    profile = load_voice_profile()
+    exemplars = load_corpus()
+    for f in files:
+        _batch_job["current"] = parse_student_name(f)
+        try:
+            draft = draft_grade(
+                parse_student_name(f), extract_text(f), profile=profile, exemplars=exemplars
+            )
+            data = draft.model_dump()
+            data["status"] = "draft"
+            store.save_draft(f.stem, data)
+        except Exception as exc:  # record and keep going — one bad PDF never stops the run
+            _batch_job["errors"][f.name] = str(exc)
+        _batch_job["done"] += 1
+    _batch_job["current"] = ""
+    _batch_job["running"] = False
+
+
+@router.post("/batch")
+def start_batch() -> dict:
+    """Draft every new submission (skips opt-outs and already-drafted reports)."""
+    with _batch_lock:
+        if _batch_job["running"]:
+            raise HTTPException(status_code=409, detail="起草任务正在进行中")
+        pending = _pending_reports()
+        if not pending:
+            raise HTTPException(status_code=409, detail="没有待起草的新报告")
+        _batch_job.update(running=True, total=len(pending), done=0, current="", errors={})
+    threading.Thread(target=_run_batch_job, args=(pending,), daemon=True).start()
+    return {"started": len(pending)}
+
+
+@router.get("/batch/status")
+def batch_status() -> dict:
+    return dict(_batch_job)
 
 
 class DraftEdit(BaseModel):
