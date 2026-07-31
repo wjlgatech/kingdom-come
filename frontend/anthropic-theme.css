@@ -1,0 +1,40 @@
+/* Anthropic brand theme for the grading surfaces — brand-as-code from
+   `anyagent brand` (never eyeballed). Scoped to body[data-theme="anthropic"]
+   so the rest of Kingdom Come keeps its own design system; the flip is this
+   one block of :root-style vars, as the playbook requires. */
+
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+body[data-theme="anthropic"] {
+  /* Foundation */
+  --bg: #faf9f5;            /* ivory */
+  --surface: #ffffff;       /* cards */
+  --surface-2: #f0eee6;     /* card alt */
+  --ink: #141413;
+  --ink-muted: #5f5e57;
+  --ink-faint: #85837a;
+  --hairline: #e3e0d6;      /* warm border; strong: #b0aea5 */
+  --accent: #d97757;        /* signature orange */
+  --accent-soft: #f8e7df;
+  --accent-ink: #faf9f5;
+
+  /* Status pairs mapped onto the brand's secondary series */
+  --status-thriving: #788c5d;       /* green — finalized */
+  --status-thriving-soft: #e9ede2;
+  --status-steady: #5f5e57;
+  --status-steady-soft: #f0eee6;
+  --status-checkin: #6a9bcc;        /* blue — drafts, deadlines */
+  --status-checkin-soft: #e4edf5;
+  --status-risk: #d97757;           /* orange — attention */
+  --status-risk-soft: #f8e7df;
+
+  /* Type: Poppins with system + CJK fallbacks (Chinese pastoral text must
+     render cleanly — Poppins has no CJK glyphs, PingFang/YaHei take over) */
+  --serif-display: "Poppins", ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --serif-body: "Poppins", ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --sans: "Poppins", ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+}
