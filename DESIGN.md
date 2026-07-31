@@ -1,3 +1,10 @@
+> **Live theme override (2026-07-30, Paul's direction):** the shipped app wears the
+> Anthropic brand aesthetic sitewide via `frontend/anthropic-theme.css` — one scoped
+> CSS-vars block over the token contract below (ivory `#faf9f5`, ink `#141413`,
+> AA-safe brand orange `#b25436` for text/buttons with the canonical `#d97757` as
+> `--accent-bright` for fills, Poppins with CJK fallbacks). The tokens below remain
+> the underlying contract; removing that one file restores this document's palette.
+
 # Design System — Kingdom Come
 
 *Created: 2026-05-04 via `/design-consultation`. Anchored to `COMPETITIVE-UX.md` and the 5 user stories.*

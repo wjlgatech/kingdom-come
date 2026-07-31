@@ -12,20 +12,27 @@ body[data-theme="anthropic"] {
   --surface-2: #f0eee6;     /* card alt */
   --ink: #141413;
   --ink-muted: #5f5e57;
-  --ink-faint: #85837a;
+  --ink-faint: #6e6b62;     /* darkened from the raw warm gray: WCAG AA (≥4.5:1) on ivory */
   --hairline: #e3e0d6;      /* warm border; strong: #b0aea5 */
-  --accent: #d97757;        /* signature orange */
+  /* The canonical brand orange is #d97757, but at text/button sizes it fails
+     WCAG AA on ivory (~3.3:1). Standard resolution: interactive/text accent
+     uses the darkened variant (#b25436, ~5:1 both as text on ivory and under
+     ivory button text); the pure hue stays for large decorative fills. */
+  --accent: #b25436;        /* AA-safe brand orange: text, links, buttons */
+  --accent-bright: #d97757; /* canonical hue — large fills, charts, art */
+  --accent-text: #a8502f;   /* deepest — italic emphasis on ivory */
   --accent-soft: #f8e7df;
   --accent-ink: #faf9f5;
 
-  /* Status pairs mapped onto the brand's secondary series */
-  --status-thriving: #788c5d;       /* green — finalized */
+  /* Status pairs: brand blue/green/orange keep the FILLS; the text shades are
+     darkened variants so small text passes WCAG AA on the soft backgrounds. */
+  --status-thriving: #55693c;       /* deep green — finalized */
   --status-thriving-soft: #e9ede2;
   --status-steady: #5f5e57;
   --status-steady-soft: #f0eee6;
-  --status-checkin: #6a9bcc;        /* blue — drafts, deadlines */
+  --status-checkin: #3f668f;        /* deep blue — drafts, deadlines */
   --status-checkin-soft: #e4edf5;
-  --status-risk: #d97757;           /* orange — attention */
+  --status-risk: #9c4a2b;           /* deep orange — attention */
   --status-risk-soft: #f8e7df;
 
   /* Type: Poppins with system + CJK fallbacks (Chinese pastoral text must

@@ -18,7 +18,7 @@
   margin: 0 0 var(--space-24);
   font-variation-settings: "opsz" 144;
 }
-.door-headline em { font-style: italic; color: var(--accent); font-weight: 400; }
+.door-headline em { font-style: italic; color: var(--accent-text, var(--accent)); font-weight: 400; }
 .door-sub {
   font-family: var(--serif-body);
   font-size: var(--text-lg);

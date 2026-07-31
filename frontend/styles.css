@@ -1,14 +1,14 @@
 :root {
   color-scheme: light;
-  --ink: #17211f;
-  --muted: #63706b;
-  --line: #d9e2df;
+  --ink: #141413;
+  --muted: #5f5e57;
+  --line: #e3e0d6;
   --paper: #ffffff;
-  --wash: #f5f8f7;
-  --green: #1f6f4a;
-  --blue: #2f6fab;
-  --gold: #b98222;
-  --danger: #a33a2a;
+  --wash: #faf9f5;
+  --green: #788c5d;
+  --blue: #6a9bcc;
+  --gold: #d97757;
+  --danger: #8a3a24;
   --shadow: 0 24px 60px rgba(23, 33, 31, 0.12);
 }
 
@@ -159,7 +159,7 @@ h3 {
 }
 
 .button.secondary {
-  background: #eaf2ef;
+  background: #f0eee6;
   color: var(--green);
 }
 
@@ -206,7 +206,7 @@ h3 {
 }
 
 .preview-header strong {
-  color: #91e0bd;
+  color: #b9c7a6;
 }
 
 .metric-row {
@@ -246,7 +246,7 @@ h3 {
 }
 
 .signal-chart span {
-  background: linear-gradient(180deg, #f5c56b, #5ad093);
+  background: linear-gradient(180deg, #6a9bcc, #788c5d);
   border-radius: 8px 8px 2px 2px;
 }
 
@@ -317,7 +317,7 @@ textarea {
 }
 
 .result {
-  background: #f7faf9;
+  background: #faf9f5;
   border: 1px solid var(--line);
   border-left: 4px solid var(--blue);
   border-radius: 8px;
@@ -344,15 +344,15 @@ textarea {
 }
 
 pre {
-  background: #13201d;
+  background: #141413;
   border-radius: 8px;
-  color: #cff4df;
+  color: #faf9f5;
   overflow: auto;
   padding: 24px;
 }
 
 .contribute {
-  background: #eef5f1;
+  background: #f0eee6;
 }
 
 .contribute p {

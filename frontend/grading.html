@@ -1,15 +1,9 @@
 {% extends "_base.html" %}
 {% block title %}Grading — Kingdom Come{% endblock %}
-{% block stylesheet %}
-<link rel="stylesheet" href="/static/anthropic-theme.css" />
-<link rel="stylesheet" href="/static/grading.css" />
-{% endblock %}
+{% block stylesheet %}<link rel="stylesheet" href="/static/grading.css" />{% endblock %}
 {% block main_class %}grading-main{% endblock %}
 {% block main %}
-<script>
-  document.body.dataset.role = "director";
-  document.body.dataset.theme = "anthropic";
-</script>
+<script>document.body.dataset.role = "director";</script>
 
 <section class="grading-header">
   <h1 class="grading-headline">期末报告批改 <em>· drafts await your judgment</em></h1>
