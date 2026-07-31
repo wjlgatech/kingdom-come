@@ -4,7 +4,7 @@ const $ = (sel) => document.querySelector(sel);
 
 async function loadDeadline() {
   try {
-    const { deadline } = await (await fetch("/api/grading/submissions")).json();
+    const { deadline } = await (await fetch("/api/grading/deadline")).json();
     const due = new Date(deadline);
     const line = $('[data-testid="deadline-line"]');
     const fmt = due.toLocaleString("zh-CN", { dateStyle: "full", timeStyle: "short" });

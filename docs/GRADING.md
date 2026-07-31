@@ -121,6 +121,31 @@ pipeline runs offline — reports never leave the machine. It sits last when
 cloud keys exist: local models can't reliably hold the pastoral register, so
 full-local is a deliberate privacy/quality trade the professor opts into.
 
+## Hosting it (giving the professor a real link)
+
+The professor's surfaces support a shared-secret gate: set `KC_GRADING_TOKEN`
+on the server and the grading page/APIs require it (401 otherwise); the
+professor's bookmark is `/cohort/grading?key=<token>`. Student intake
+(`/submit`, upload, deadline) stays open. **Never host real student reports
+without the token set.** Unset, everything stays open for local use.
+
+Fly.io runbook (one-time, from the repo):
+
+```bash
+fly auth login
+fly volumes create grading_data --size 1 --region <region>
+# add to fly.toml:  [mounts]  source = "grading_data"  destination = "/data"
+fly secrets set ANTHROPIC_API_KEY=sk-ant-... \
+                KC_GRADING_TOKEN="$(openssl rand -hex 16)" \
+                KC_GRADING_DIR=/data
+fly deploy
+```
+
+Then share: students get `https://<app>.fly.dev/submit`, the professor gets
+`https://<app>.fly.dev/cohort/grading?key=<token>`. The voice corpus is
+gitignored, so copy it to the volume once (`fly ssh sftp`) or accept
+profile-only drafting.
+
 ## Eval harness — honest limitation
 
 The 2023 corpus contains comments only (not the reports they answered), so

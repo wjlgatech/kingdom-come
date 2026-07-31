@@ -191,3 +191,30 @@ class TestWebBatch:
         _seed_draft(tmp_path, name="王明_报告", status="draft")
         r = client.post("/api/grading/batch")
         assert r.status_code == 409  # the only report already has a draft
+
+
+class TestProfessorGate:
+    def test_unset_token_leaves_everything_open(self, client):
+        assert client.get("/api/grading/drafts").status_code == 200
+
+    def test_token_gates_professor_endpoints(self, client, monkeypatch):
+        monkeypatch.setenv("KC_GRADING_TOKEN", "secret-key")
+        assert client.get("/api/grading/drafts").status_code == 401
+        assert client.post("/api/grading/batch").status_code == 401
+        assert client.get("/api/grading/export.csv").status_code == 401
+        # header and query param both accepted
+        assert client.get("/api/grading/drafts", headers={"X-KC-Key": "secret-key"}).status_code == 200
+        assert client.get("/api/grading/export.csv?key=secret-key").status_code == 200
+        assert client.get("/api/grading/drafts", headers={"X-KC-Key": "wrong"}).status_code == 401
+
+    def test_student_paths_stay_open_when_gated(self, client, monkeypatch):
+        monkeypatch.setenv("KC_GRADING_TOKEN", "secret-key")
+        assert client.get("/api/grading/deadline").status_code == 200
+        r = client.post(
+            "/api/grading/submissions",
+            files={"file": ("王明_《属灵操练的练习》报告.pdf", b"%PDF-1.4 x", "application/pdf")},
+            data={"consent": "yes"},
+        )
+        assert r.status_code == 200
+        # but the professor's submissions LIST is gated
+        assert client.get("/api/grading/submissions").status_code == 401

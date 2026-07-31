@@ -9,9 +9,11 @@ submissions with one button.
 
 from __future__ import annotations
 
+import os
+import secrets as _secrets
 import threading
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel
 
@@ -19,6 +21,24 @@ from backend.grading import intake, store, synthesis
 from backend.grading.corpus import load_corpus
 from backend.grading.extract import SUPPORTED_SUFFIXES, extract_text, parse_student_name
 from backend.grading.grader import draft_grade, load_voice_profile
+
+def require_professor_key(request: Request) -> None:
+    """Shared-secret gate for the professor's surfaces (hosted deployments).
+
+    Set KC_GRADING_TOKEN on the server and give the professor the link
+    /cohort/grading?key=<token> — the page stores it and sends it on every
+    API call. Unset (local/dev), everything stays open. Student intake
+    (/submit + POST /api/grading/submissions) is deliberately NOT gated.
+    """
+    token = os.getenv("KC_GRADING_TOKEN")
+    if not token:
+        return
+    supplied = request.headers.get("x-kc-key") or request.query_params.get("key") or ""
+    if not _secrets.compare_digest(supplied, token):
+        raise HTTPException(status_code=401, detail="批改页面需要访问密钥（链接中的 ?key=）")
+
+
+PROF = Depends(require_professor_key)
 
 router = APIRouter(prefix="/api/grading", tags=["grading"])
 
@@ -63,7 +83,7 @@ def _run_batch_job(files: list) -> None:
     _batch_job["running"] = False
 
 
-@router.post("/batch")
+@router.post("/batch", dependencies=[PROF])
 def start_batch() -> dict:
     """Draft every new submission (skips opt-outs and already-drafted reports)."""
     with _batch_lock:
@@ -77,7 +97,7 @@ def start_batch() -> dict:
     return {"started": len(pending)}
 
 
-@router.get("/batch/status")
+@router.get("/batch/status", dependencies=[PROF])
 def batch_status() -> dict:
     return dict(_batch_job)
 
@@ -92,12 +112,12 @@ class RegenerateRequest(BaseModel):
     guidance: str  # the professor's instruction, in their own words
 
 
-@router.get("/drafts")
+@router.get("/drafts", dependencies=[PROF])
 def list_drafts() -> dict:
     return {"drafts": store.list_drafts()}
 
 
-@router.get("/drafts/{draft_id}")
+@router.get("/drafts/{draft_id}", dependencies=[PROF])
 def get_draft(draft_id: str) -> dict:
     try:
         data = store.get_draft(draft_id)
@@ -107,7 +127,7 @@ def get_draft(draft_id: str) -> dict:
     return data
 
 
-@router.put("/drafts/{draft_id}")
+@router.put("/drafts/{draft_id}", dependencies=[PROF])
 def edit_draft(draft_id: str, edit: DraftEdit) -> dict:
     try:
         return store.update_draft(
@@ -119,7 +139,7 @@ def edit_draft(draft_id: str, edit: DraftEdit) -> dict:
         raise HTTPException(status_code=409, detail=str(exc))
 
 
-@router.post("/drafts/{draft_id}/finalize")
+@router.post("/drafts/{draft_id}/finalize", dependencies=[PROF])
 def finalize(draft_id: str) -> dict:
     try:
         return store.finalize_draft(draft_id)
@@ -127,7 +147,7 @@ def finalize(draft_id: str) -> dict:
         raise HTTPException(status_code=404, detail="draft not found")
 
 
-@router.post("/drafts/{draft_id}/reopen")
+@router.post("/drafts/{draft_id}/reopen", dependencies=[PROF])
 def reopen(draft_id: str) -> dict:
     try:
         return store.reopen_draft(draft_id)
@@ -135,7 +155,7 @@ def reopen(draft_id: str) -> dict:
         raise HTTPException(status_code=404, detail="draft not found")
 
 
-@router.post("/drafts/{draft_id}/regenerate")
+@router.post("/drafts/{draft_id}/regenerate", dependencies=[PROF])
 def regenerate(draft_id: str, req: RegenerateRequest) -> dict:
     try:
         current = store.get_draft(draft_id)
@@ -164,7 +184,7 @@ def regenerate(draft_id: str, req: RegenerateRequest) -> dict:
     return data
 
 
-@router.post("/synthesis")
+@router.post("/synthesis", dependencies=[PROF])
 def run_synthesis() -> dict:
     """M3: finalized reports -> formation signals -> demand/supply advisory."""
     try:
@@ -175,7 +195,7 @@ def run_synthesis() -> dict:
         raise HTTPException(status_code=502, detail=f"synthesis failed: {exc}")
 
 
-@router.get("/synthesis")
+@router.get("/synthesis", dependencies=[PROF])
 def get_synthesis() -> dict:
     result = synthesis.latest_synthesis()
     if result is None:
@@ -196,15 +216,21 @@ async def submit_report(
         raise HTTPException(status_code=422, detail=str(exc))
 
 
-@router.get("/submissions")
+@router.get("/submissions", dependencies=[PROF])
 def submissions() -> dict:
     return {"submissions": intake.list_submissions(), "deadline": intake.deadline().isoformat()}
 
 
-@router.get("/export.csv")
+@router.get("/export.csv", dependencies=[PROF])
 def export_csv() -> Response:
     return Response(
         content=store.export_gradebook_csv(),
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": "attachment; filename=gradebook.csv"},
     )
+
+
+@router.get("/deadline")
+def get_deadline() -> dict:
+    """Open to students: the /submit page shows the countdown from this."""
+    return {"deadline": intake.deadline().isoformat()}

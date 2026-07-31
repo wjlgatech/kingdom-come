@@ -7,9 +7,18 @@ const $ = (sel) => document.querySelector(sel);
 let drafts = [];
 let selectedId = null;
 
+// Hosted deployments gate this page with KC_GRADING_TOKEN: the professor's
+// link carries ?key=…, which we keep for the session and send on every call.
+const urlKey = new URLSearchParams(location.search).get("key");
+if (urlKey) sessionStorage.setItem("kcGradingKey", urlKey);
+const gradingKey = sessionStorage.getItem("kcGradingKey");
+
 async function api(path, options = {}) {
   const res = await fetch(`/api/grading${path}`, {
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(gradingKey ? { "X-KC-Key": gradingKey } : {}),
+    },
     ...options,
   });
   if (!res.ok) {
@@ -171,6 +180,12 @@ async function startBatch() {
 
 $('[data-testid="batch-btn"]').addEventListener("click", startBatch);
 
+// The CSV export is a plain link; carry the key as a query param when gated.
+if (gradingKey) {
+  const exportLink = $('[data-testid="grading-export"]');
+  exportLink.href = `/api/grading/export.csv?key=${encodeURIComponent(gradingKey)}`;
+}
+
 // --- M3: cohort synthesis panel ---
 
 function renderSynthesis(s) {
@@ -219,4 +234,9 @@ $('[data-testid="regen-btn"]').addEventListener("click", guard(regenerate));
 
 refreshList().then(() => {
   if (drafts.length) selectDraft(drafts[0].id);
-}).catch((e) => setStatus(e.message, true));
+}).catch((e) => {
+  // Surface load failures in the always-visible toolbar (the status line
+  // lives in the detail pane, which is hidden until a draft loads).
+  $('[data-testid="grading-progress"]').textContent = e.message;
+  $('[data-testid="draft-list"]').setAttribute("aria-busy", "false");
+});
