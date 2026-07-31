@@ -52,7 +52,7 @@ def _parse_json_object(text: str) -> dict:
     match = re.search(r"\{.*\}", text, re.DOTALL)
     if not match:
         raise ValueError(f"no JSON object in model response: {text[:200]!r}")
-    return json.loads(match.group(0))
+    return json.loads(match.group(0), strict=False)  # local models emit raw newlines in strings
 
 
 def extract_signals(report_text: str, comment: str, llm: Callable[[str, str], str] | None = None) -> dict:

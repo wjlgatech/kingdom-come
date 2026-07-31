@@ -73,10 +73,13 @@ def complete(system: str, user: str) -> str:
                     api_key=os.environ["NVIDIA_API_KEY"], model=NVIDIA_MODEL,
                 )
             if tier == "ollama":
+                # Default matches the mentor chain's installed model (free-llm
+                # rule: wire the model `ollama list` actually shows, never a
+                # wished-for one — an uninstalled default 404s silently).
                 return _complete_openai_protocol(
                     system, user,
                     base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1"),
-                    api_key="ollama", model=os.getenv("GRADING_OLLAMA_MODEL", "qwen2.5:14b"),
+                    api_key="ollama", model=os.getenv("GRADING_OLLAMA_MODEL", "qwen2.5:7b"),
                 )
             return _complete_openai_protocol(
                 system, user, base_url=None,

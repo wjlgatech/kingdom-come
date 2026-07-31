@@ -85,7 +85,17 @@ comment side-by-side, inline editing, and three agentic actions:
   leave the system.
 
 The LLM survival chain (free-llm rule): `ANTHROPIC_API_KEY` (claude-opus-5,
-preferred) → `NVIDIA_API_KEY` (free NIM tier, gpt-oss-120b) → `OPENAI_API_KEY`.
+preferred) → `NVIDIA_API_KEY` (free NIM tier, gpt-oss-120b) → `OPENAI_API_KEY`
+→ local Ollama (`GRADING_ALLOW_OLLAMA=1`).
+
+**Tier status, probed live 2026-07-30 on Paul's machine:**
+
+| Tier | Status | Evidence |
+|---|---|---|
+| Anthropic claude-opus-5 | ✅ working | voice fidelity 0.96 (judged) |
+| NVIDIA NIM (free) | ⏳ needs a key | free at build.nvidia.com → then `mkdir -p ~/.config/nvidia && echo 'NVIDIA_API_KEY=nvapi-…' > ~/.config/nvidia/nim.env` — `run.sh` picks it up automatically |
+| OpenAI | ⏳ needs a key | optional |
+| Local Ollama qwen2.5:7b | ✅ working, fully offline | full pipeline drafted in 8s with zero cloud keys; JSON parser is lenient to the local model's raw-newline quirk |
 
 ## M3: cohort synthesis (班级属灵光景与教学建议)
 

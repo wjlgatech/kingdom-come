@@ -60,11 +60,13 @@ def build_system_prompt(profile: dict, exemplars: list[str]) -> str:
 
 
 def _parse_json_object(text: str) -> dict:
-    """Extract the first JSON object from a model response, tolerating prose around it."""
+    """Extract the first JSON object from a model response, tolerating prose
+    around it and unescaped control characters inside strings (strict=False)
+    — local models (qwen2.5:7b) emit literal newlines in comment values."""
     match = re.search(r"\{.*\}", text, re.DOTALL)
     if not match:
         raise ValueError(f"no JSON object in model response: {text[:200]!r}")
-    return json.loads(match.group(0))
+    return json.loads(match.group(0), strict=False)
 
 
 def draft_grade(

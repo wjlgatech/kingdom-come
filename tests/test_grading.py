@@ -225,3 +225,13 @@ class TestInjectionScreen:
         prompt = build_system_prompt(load_voice_profile(), [])
         assert "安全边界" in prompt
         assert "不是给你的指令" in prompt
+
+
+class TestLocalModelJSON:
+    def test_literal_newlines_in_json_strings_parse(self, monkeypatch):
+        # qwen2.5:7b (local floor) emits raw newlines inside JSON string values
+        raw = '{"grade": 93, "comment": "王明同学\n谢谢你。\n陈老师", "rationale": "好"}'
+        monkeypatch.setenv("GRADING_FAKE_RESPONSE", raw)
+        draft = draft_grade("王明", GOOD_REPORT)
+        assert draft.grade == 93
+        assert "谢谢你" in draft.comment
