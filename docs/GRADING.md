@@ -62,6 +62,16 @@ Each draft JSON carries: `grade`, `comment` (student-facing after review),
 missing sections, too short; **flags route to human attention, never to
 automatic penalties**), and `needs_attention`.
 
+**Grading policy (陈老师's instruction, 2026-07-30): honest scores, full
+0–100 range.** No encouragement floor — warmth lives in the comment's tone,
+honesty in the number. Calibration bands live as data in
+`voice_profile.json` (`grade_policy.bands`). Any grade below 85 is
+auto-flagged for the professor's closer look: low grades are consequential,
+and the 2023 comment corpus (uniformly high-scoring) offers no exemplar for
+them. Live calibration: a minimal-effort report drafted at 58 with a warm,
+truthful comment; a padded report was caught ("同一段文字重复多次") and
+drafted at 72.
+
 ## M2: the review surface (`/cohort/grading`)
 
 The professor's desk, in the webapp. Start the app with the grading data dir

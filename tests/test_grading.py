@@ -84,12 +84,24 @@ class TestGrader:
         assert "陈老师" in draft.comment
         assert draft.needs_attention is False
 
-    def test_below_baseline_needs_attention(self, monkeypatch):
+    def test_low_grade_needs_attention(self, monkeypatch):
+        # Honest-grading policy (陈老师 2026-07-30): full 0-100 range is legit;
+        # grades under attention_below (85) route to the professor's closer look.
         low = json.loads(FAKE_RESPONSE)
-        low["grade"] = 85
+        low["grade"] = 84
         monkeypatch.setenv("GRADING_FAKE_RESPONSE", json.dumps(low, ensure_ascii=False))
-        draft = draft_grade("王明", GOOD_REPORT)
-        assert draft.needs_attention is True
+        assert draft_grade("王明", GOOD_REPORT).needs_attention is True
+
+    def test_honest_mid_grade_is_not_flagged(self, monkeypatch):
+        mid = json.loads(FAKE_RESPONSE)
+        mid["grade"] = 85
+        monkeypatch.setenv("GRADING_FAKE_RESPONSE", json.dumps(mid, ensure_ascii=False))
+        assert draft_grade("王明", GOOD_REPORT).needs_attention is False
+
+    def test_honest_bands_in_system_prompt(self):
+        prompt = build_system_prompt(load_voice_profile(), [])
+        assert "诚实评分" in prompt
+        assert "0-69" in prompt  # full range is spelled out, no 90 floor
 
     def test_structural_flags_force_attention(self, monkeypatch):
         monkeypatch.setenv("GRADING_FAKE_RESPONSE", FAKE_RESPONSE)
