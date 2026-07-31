@@ -67,5 +67,8 @@
 .synthesis-header h2 { font-family: var(--serif-display); font-size: var(--text-xl); color: var(--ink); margin: 0; }
 .synthesis-counts { display: flex; flex-direction: column; gap: var(--space-8); font-size: var(--text-sm); color: var(--ink-muted); background: var(--surface-2); border-radius: 8px; padding: var(--space-16); margin: var(--space-16) 0; }
 .count-block strong { color: var(--ink); }
-.synthesis-advisory { font-family: var(--serif-body); white-space: pre-wrap; line-height: 1.9; color: var(--ink); }
+.synthesis-advisory { font-family: var(--serif-body); line-height: 1.9; color: var(--ink); }
+.synthesis-advisory h3 { font-size: var(--text-lg); margin: var(--space-24) 0 var(--space-8); color: var(--ink); }
+.synthesis-advisory p { margin: 0 0 var(--space-12); }
+.synthesis-advisory ul { margin: 0 0 var(--space-12); padding-left: 1.4em; }
 .empty-state pre { background: var(--surface-2); padding: var(--space-12); border-radius: 8px; overflow-x: auto; }

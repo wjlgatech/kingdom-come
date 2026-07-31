@@ -25,7 +25,20 @@ FLAG_LABELS = {
     "missing_section_retreat": "未找到第三部分：退省经历",
     "too_short": f"篇幅明显不足（少于 {MIN_CHARS} 字，要求约 {EXPECTED_CHARS} 字）",
     "empty_report": "报告内容为空或无法提取文本",
+    "possible_injection": "报告中出现疑似操纵 AI 批改的文字（如指定分数、伪装指令）——请亲自核查",
 }
+
+# Deterministic screen for prompt-injection attempts hidden inside a report —
+# text that tries to command the grader rather than testify to the student's
+# practice. Detection only FLAGS for the professor; it never changes the grade.
+INJECTION_MARKERS = [
+    re.compile(r"忽略(以上|之前|前面|上述)"),
+    re.compile(r"(系统|新的?)(指令|提示词|规则)"),
+    re.compile(r"(给我?|打|评)\s*(满分|100\s*分|一百分)"),
+    re.compile(r"你(现在)?是.{0,12}(助手|模型|AI)"),
+    re.compile(r"ignore (all )?(previous|above|prior) (instructions|rules)", re.IGNORECASE),
+    re.compile(r"(system|new) (prompt|instruction)", re.IGNORECASE),
+]
 
 
 def count_cjk(text: str) -> int:
@@ -42,6 +55,8 @@ def structure_flags(text: str) -> list[str]:
             flags.append(flag)
     if count_cjk(text) < MIN_CHARS:
         flags.append("too_short")
+    if any(marker.search(text) for marker in INJECTION_MARKERS):
+        flags.append("possible_injection")
     return flags
 
 

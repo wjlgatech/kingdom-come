@@ -188,6 +188,22 @@ if (gradingKey) {
 
 // --- M3: cohort synthesis panel ---
 
+// Minimal, injection-safe markdown for the advisory: escape everything first,
+// then allow only headings, bold, and bullets. No raw HTML ever passes through.
+function advisoryToHtml(text) {
+  const esc = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const blocks = esc.split(/\n{2,}/).map((block) => {
+    const lines = block.split("\n").filter((l) => l.trim());
+    if (!lines.length) return "";
+    if (lines.length === 1 && /^#{1,3}\s/.test(lines[0]))
+      return `<h3>${lines[0].replace(/^#{1,3}\s*/, "")}</h3>`;
+    if (lines.every((l) => /^\s*[-•]\s/.test(l)))
+      return `<ul>${lines.map((l) => `<li>${l.replace(/^\s*[-•]\s*/, "")}</li>`).join("")}</ul>`;
+    return `<p>${lines.join("<br>")}</p>`;
+  });
+  return blocks.join("").replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+}
+
 function renderSynthesis(s) {
   $('[data-testid="synthesis-body"]').hidden = false;
   const counts = $('[data-testid="synthesis-counts"]');
@@ -207,7 +223,7 @@ function renderSynthesis(s) {
     div.appendChild(document.createTextNode(entries));
     counts.appendChild(div);
   }
-  $('[data-testid="synthesis-advisory"]').textContent = s.advisory;
+  $('[data-testid="synthesis-advisory"]').innerHTML = advisoryToHtml(s.advisory);
 }
 
 async function runSynthesis() {
