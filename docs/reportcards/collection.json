@@ -1,0 +1,34 @@
+[
+  {
+    "id": "rc0001",
+    "delivery": "The integrity chain (OEC) shipped in kingdom-come: append-only hash-chained claims, three honest grades, contradiction + latency evals, a self-naming platform gate, living endorsements \u2014 10 API routes, 12 tests replaying the documented 2026 case; make check 227 passed",
+    "objective": "Build the agentic solution from the prophetic-integrity-stack essay in the kingdom-come repo",
+    "created_at": "2026-08-02T22:54:05Z",
+    "key_results": [
+      {
+        "text": "Observability: tamper-evident hash chain (rewriting any past event names its broken seq); dissent recorded beside the claim",
+        "target": "append-only holds",
+        "score": 1.0,
+        "evidence": "test_chain_tamper_is_detected_and_named + test_dissent_is_logged_beside_the_claim green"
+      },
+      {
+        "text": "Eval: criterion+horizon at commit; not_measurable enforced (unfalsifiable can never be counted fulfilled); wedding-contradiction fires same day; latency-to-correction computable",
+        "target": "Deut 18:22 as code",
+        "score": 1.0,
+        "evidence": "5 replay tests named after the case, all green"
+      },
+      {
+        "text": "Control: platform_gate fails only on measured evidence with self-naming reasons; endorsements expire and re-verify",
+        "target": "consequences subscribe to the scorecard",
+        "score": 1.0,
+        "evidence": "gate tests + API roundtrip green"
+      },
+      {
+        "text": "Shipped per the repo's own discipline: routes in app idioms, PRAYER.md + README + CHANGELOG updated, make check 227 passed, pushed to main",
+        "target": "Definition of SHIPPED met",
+        "score": 1.0,
+        "evidence": "commit 1c5869f on origin/main"
+      }
+    ]
+  }
+]
