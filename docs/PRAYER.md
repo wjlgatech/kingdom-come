@@ -122,3 +122,33 @@ State is in-process by default (matches the project's pattern; see `vector_memor
 - AI mentor integration (prayer-journal entries as opt-in vector-memory snippets for `chat_with_mentor`).
 - Real-time prayer rooms over WebSocket.
 - Anonymous prayer mode.
+
+## The integrity chain (OEC: observability · eval · control)
+
+The pastoral ledgers above answer "was this word confirmed and fulfilled?" The integrity
+chain (`backend/services/integrity.py`, `/api/integrity/*`) answers a harder question the
+2026 ministry-integrity cases exposed: **can the record itself be trusted, and do
+consequences actually follow it?** Design (from the essay "We Hold Chatbots to Higher
+Prophetic Standards Than Prophets"):
+
+- **Observability** — every event (claim, resolution, correction, dissent, endorsement) is
+  an append-only, hash-chained commit. Nothing is rewritten: a revision is a NEW event, so
+  "it was only a vision" becomes a visible diff (`GET /api/integrity/claims/{id}/history`),
+  and editing the past breaks the chain (`GET /api/integrity/chain/verify` names the broken
+  seq). Dissent is first-class: an objection is recorded beside the claim it contests.
+- **Eval** — a claim declares its resolution criterion and horizon at commit time
+  (Deut 18:22 is the grader). Three honest grades: `fulfilled` / `failed` /
+  `not_measurable` — a word that can never be false can never be counted true. Two evals
+  need no waiting: structural contradiction (same speaker + subject, opposite stance —
+  detected the day of the second commit) and latency-to-correction (failed public words
+  carry a running uncorrected-days clock).
+- **Control** — `GET /api/integrity/speakers/{id}/gate` computes go/no-go from measured
+  evidence only (broken chain, open contradiction, stale uncorrected public failure — each
+  failure names itself; unmeasurable words never pass or fail it). Endorsements are living
+  objects: they expire and re-verify against the gate instead of outliving their evidence.
+
+Honesty notes: contradiction detection is structural (declared subject+stance), not
+semantic; the chain is in-memory with `reset()` like its sibling services (write-through
+persistence via `LedgerRecord kind="chain"` is the documented follow-up); and a ledger
+raises the cost of fraud and collapses the cost of discernment — it does not regenerate
+hearts. Tests: `tests/test_integrity.py` replays the documented 2026 case, test by test.

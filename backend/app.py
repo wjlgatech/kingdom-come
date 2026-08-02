@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from backend.api.grading import router as grading_router
 from backend.api.ws_chat import router as ws_chat_router
 from backend.fixtures import cohort as cohort_fixtures
+from backend.services import integrity as integrity_service
 from backend.services import journey as journey_service
 from backend.services import prayer as prayer_service
 from backend.services import pulse as pulse_service
@@ -464,6 +465,118 @@ def get_prophecy(prophecy_id: str) -> dict[str, object]:
         return _serialize(prayer_service.get_prophecy(prophecy_id))
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+# ── Integrity chain (OEC: observability · eval · control) ────────────────────
+# The append-only, hash-chained claim registry + platform gate. Complements the
+# pastoral prophecy ledger above; see backend/services/integrity.py and
+# docs/PRAYER.md ("The integrity chain").
+
+class ClaimIn(BaseModel):
+    speaker_id: str = Field(min_length=1)
+    word: str = Field(min_length=1)
+    public: bool = True
+    subject: str | None = None
+    stance: str | None = None      # "for" | "against" (requires subject)
+    criterion: str | None = None   # what counts as fulfilled…
+    horizon: str | None = None     # …and by when (ISO date)
+
+
+class ClaimResolveIn(BaseModel):
+    outcome: str                   # fulfilled | failed | not_measurable
+    testimony: str = ""
+    falsified_at: str | None = None
+
+
+class ClaimCorrectIn(BaseModel):
+    note: str = Field(min_length=1)
+
+
+class ClaimDissentIn(BaseModel):
+    by: str = Field(min_length=1)
+    note: str = ""
+
+
+class EndorsementIn(BaseModel):
+    endorser_id: str = Field(min_length=1)
+    speaker_id: str = Field(min_length=1)
+    expires_at: str = Field(min_length=1)
+
+
+def _claim_dict(c) -> dict[str, object]:
+    from dataclasses import asdict
+    return asdict(c)
+
+
+@app.post("/api/integrity/claims")
+def commit_claim(body: ClaimIn) -> dict[str, object]:
+    try:
+        c = integrity_service.commit_claim(
+            body.speaker_id, body.word, public=body.public, subject=body.subject,
+            stance=body.stance, criterion=body.criterion, horizon=body.horizon,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return _claim_dict(c)
+
+
+@app.post("/api/integrity/claims/{claim_id}/resolve")
+def resolve_claim(claim_id: str, body: ClaimResolveIn) -> dict[str, object]:
+    try:
+        c = integrity_service.resolve_claim(
+            claim_id, body.outcome, testimony=body.testimony, falsified_at=body.falsified_at
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return _claim_dict(c)
+
+
+@app.post("/api/integrity/claims/{claim_id}/correct")
+def correct_claim(claim_id: str, body: ClaimCorrectIn) -> dict[str, object]:
+    try:
+        return _claim_dict(integrity_service.correct_claim(claim_id, body.note))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.post("/api/integrity/claims/{claim_id}/dissent")
+def dissent_claim(claim_id: str, body: ClaimDissentIn) -> dict[str, object]:
+    try:
+        return _claim_dict(integrity_service.add_dissent(claim_id, by=body.by, note=body.note))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.get("/api/integrity/claims/{claim_id}/history")
+def claim_history(claim_id: str) -> dict[str, object]:
+    return {"events": integrity_service.claim_history(claim_id)}
+
+
+@app.get("/api/integrity/chain/verify")
+def verify_chain() -> dict[str, object]:
+    return integrity_service.verify_chain()
+
+
+@app.get("/api/integrity/speakers/{speaker_id}/record")
+def integrity_record(speaker_id: str) -> dict[str, object]:
+    return integrity_service.integrity_record(speaker_id)
+
+
+@app.get("/api/integrity/speakers/{speaker_id}/gate")
+def platform_gate(speaker_id: str) -> dict[str, object]:
+    return integrity_service.platform_gate(speaker_id)
+
+
+@app.post("/api/integrity/endorsements")
+def endorse(body: EndorsementIn) -> dict[str, object]:
+    return integrity_service.endorse(
+        body.endorser_id, body.speaker_id, expires_at=body.expires_at
+    )
+
+
+@app.get("/api/integrity/endorsements/{endorser_id}/{speaker_id}")
+def verify_endorsement(endorser_id: str, speaker_id: str) -> dict[str, object]:
+    return integrity_service.verify_endorsement(endorser_id, speaker_id)
 
 
 @app.post("/api/prophecies/{prophecy_id}/weighings")

@@ -5,6 +5,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **The integrity chain (OEC: observability · eval · control)** — an append-only,
+  hash-chained public-claim registry beside the pastoral prophecy ledger
+  (`backend/services/integrity.py`, 10 routes under `/api/integrity/*`). Claims declare
+  their resolution criterion and horizon at commit time and grade three honest ways
+  (`fulfilled` / `failed` / `not_measurable` — an uncriterioned word can never be counted
+  fulfilled); structural contradiction detection fires the day of the second commit (the
+  "wedding test"); failed public words carry a running latency-to-correction clock; a
+  `platform_gate` computes go/no-go from measured evidence only, with self-naming failure
+  reasons; endorsements expire and re-verify instead of outliving their evidence. Tamper
+  evidence via `verify_chain` (rewriting any past event names the broken seq).
+  `tests/test_integrity.py` (12 tests) replays the documented 2026 ministry-integrity case
+  test by test, per the motivating essay. Honest scope: contradiction detection is
+  structural (declared subject+stance), not semantic; chain persistence
+  (`LedgerRecord kind="chain"`) is the documented follow-up.
+
 ## [0.9.0] - 2026-07-03
 
 ### Added

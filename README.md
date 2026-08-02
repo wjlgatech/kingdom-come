@@ -32,6 +32,7 @@ What you get on day one:
 - **Ministry outcome snapshots** that connect field impact back to formation.
 - **An AI mentor with memory you control** — view and forget what it remembers.
 - **Prayer + prophecy ledgers** with track records that can persist across restarts (`KC_PERSIST=1`).
+- **The integrity chain (OEC)** — append-only hash-chained claims with declared resolution criteria, contradiction + latency-to-correction evals, and a platform gate + living endorsements (`/api/integrity/*`, [docs/PRAYER.md](docs/PRAYER.md)).
 - **The Formation Year** (`/me/year`) — a student's whole year assembled as one editorial page.
 - **CSV roster import**, a shared 40-day journey, installable PWA, first-run tours.
 - **AI-assisted report grading** — student intake portal (`/submit`, consent-first with an honored opt-out), drafts in the professor's own voice, a review surface where the professor edits/regenerates/finalizes every grade (`/cohort/grading`), and cohort synthesis that turns finalized reports into demand/supply teaching advice ([docs/GRADING.md](docs/GRADING.md)).
@@ -51,22 +52,35 @@ The OpenAPI docs are available at `http://127.0.0.1:8000/docs`.
 
 ## Quickstart
 
-One command — installs on first run, picks a free LLM backend automatically
-(NVIDIA NIM key if found → local Ollama → scripted fallback), seeds the demo,
-and serves at `http://127.0.0.1:8000`:
+Nothing to install — the [live demo](https://kingdom-come.fly.dev) is the fastest path.
+
+To run it yourself, one command installs on first run, picks a free LLM backend
+automatically (NVIDIA NIM key if found → local Ollama → scripted fallback),
+seeds the demo, serves at `http://127.0.0.1:8000`, **and opens your browser**:
 
 ```bash
-./run.sh
+make demo          # or: ./run.sh — same thing
 ```
 
-For development (tests, Playwright):
+Set `KC_NO_OPEN=1` (or pass `--no-open` to the `kingdom-come` CLI) to skip the
+browser on a headless host; CI is detected and skipped automatically.
+
+| Command | What it does |
+|---|---|
+| `make demo` | Install if needed, seed, serve, open the browser. |
+| `make serve` | Same app, no browser — containers and remote hosts. |
+| `make install` | Dev extras + Playwright chromium. |
+| `make test` | Full suite (unit + API + WS + E2E + a11y + brand). |
+| `make check` | The ship gate: compile + full suite. |
+| `make brand-verify` | Assert the **live** deploy serves the brand this repo ships. |
+
+For development:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -e ".[dev]"
-python -m playwright install chromium
-python -m pytest
+make install
+make test
 uvicorn backend.app:app --reload
 ```
 
