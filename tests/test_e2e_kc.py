@@ -12,7 +12,9 @@ All assertions use `wait_for_function` against actual DOM content. Never
 
 import os
 import socket
+import pathlib
 import subprocess
+import tempfile
 import sys
 import time
 
@@ -36,9 +38,17 @@ def live_app():
     }
     env.pop("REDIS_URL", None)
     env.pop("KC_DEMO_SEED", None)  # tests assert on empty ledgers
+    log = tempfile.NamedTemporaryFile(
+        mode="w", suffix=f"-uvicorn-{port}.log", delete=False
+    )
     process = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "backend.app:app", "--host", "127.0.0.1", "--port", str(port)],
-        stdout=subprocess.PIPE,
+        # NOT subprocess.PIPE: nothing reads this handle, so uvicorn's access
+        # log fills the 64KB OS pipe buffer, blocks on write, and the server
+        # silently stops answering — surfacing as a 30s page.goto timeout in
+        # whichever test happens to cross the threshold. A temp file has the
+        # same diagnostics with no back-pressure.
+        stdout=log,
         stderr=subprocess.STDOUT,
         text=True,
         env=env,
@@ -50,7 +60,8 @@ def live_app():
                 break
         time.sleep(0.1)
     else:
-        output = process.stdout.read() if process.stdout else ""
+        log.flush()
+        output = pathlib.Path(log.name).read_text()
         process.terminate()
         raise RuntimeError(f"Uvicorn did not start: {output}")
 
@@ -58,6 +69,7 @@ def live_app():
 
     process.terminate()
     process.wait(timeout=5)
+    log.close()
 
 
 def _seed_role(page, role, base):

@@ -9,6 +9,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
 from backend.api.grading import router as grading_router
+from backend.api.http_chat import router as http_chat_router
 from backend.api.ws_chat import router as ws_chat_router
 from backend.fixtures import cohort as cohort_fixtures
 from backend.services import integrity as integrity_service
@@ -33,6 +34,8 @@ if not FRONTEND_DIR.is_dir():
 
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 app.include_router(ws_chat_router)
+# HTTP fallback for hosts without WebSockets (Vercel). Same pipeline, no stream.
+app.include_router(http_chat_router)
 app.include_router(grading_router)
 
 # Opt-in write-through persistence for the ledgers (KC_PERSIST=1): creates

@@ -4,7 +4,7 @@
 
 Kingdom Come is an open-source FastAPI platform for seminaries, church networks, and ministry training teams that want to move from scattered spreadsheets to real formation signals. It combines dropout risk detection, adaptive curriculum recommendations, live class orchestration, and ministry outcome tracking in one contributor-friendly project.
 
-**[Try the live demo →](https://kingdom-come.fly.dev)** (seeded demo week, scripted mentor — nothing to install)
+**[Try the live demo →](https://kingdom-come.vercel.app)** (seeded demo week, scripted mentor — nothing to install)
 
 [Explore the repo](https://github.com/wjlgatech/kingdom-come) · [Run locally](#quickstart) · [Contribute](#contribute)
 
@@ -52,7 +52,7 @@ The OpenAPI docs are available at `http://127.0.0.1:8000/docs`.
 
 ## Quickstart
 
-Nothing to install — the [live demo](https://kingdom-come.fly.dev) is the fastest path.
+Nothing to install — the [live demo](https://kingdom-come.vercel.app) is the fastest path.
 
 To run it yourself, one command installs on first run, picks a free LLM backend
 automatically (NVIDIA NIM key if found → local Ollama → scripted fallback),
@@ -130,8 +130,17 @@ Set `KC_DEMO_SEED=1` to start with a lived-in demo week.
 
 ## Deploy it
 
-A hosted demo runs at **https://kingdom-come.fly.dev** (Fly.io, demo mode,
-scales to zero when idle).
+The canonical hosted demo runs at **https://kingdom-come.vercel.app** (Vercel,
+demo mode, scales to zero when idle). It serves the real FastAPI app from
+`api/index.py` — same pages, same JSON API. Two deliberate differences from a
+local run, because Vercel Functions are serverless:
+
+- **Mentor chat uses HTTP, not WebSockets.** Vercel can't hold a socket, so
+  `frontend/chat.js` falls back to `POST /api/chat` — the same pipeline and the
+  same reply, delivered whole instead of streamed. `make demo` streams.
+- **Ledger writes last only as long as a warm instance.** Every cold start
+  re-seeds the demo week, so reads are always full. For durable ledgers set
+  `KC_PERSIST=1` + a real `DATABASE_URL` on a single-process host.
 
 One command, no clone (needs [uv](https://docs.astral.sh/uv/)):
 
@@ -143,15 +152,18 @@ One click — get your own hosted instance (demo mode, zero secrets needed):
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/wjlgatech/kingdom-come)
 
-Or one command on Fly.io:
+Or deploy your own copy to Vercel (the canonical host — `vercel.json` +
+`requirements.txt` ship in the repo):
 
 ```bash
-fly launch --copy-config --now   # uses the shipped fly.toml
+vercel link && vercel --prod
 ```
 
-The repo is deploy-ready: a verified `Dockerfile`, `docker-compose.yml`
-(demo mode out of the box), and blueprints for Render (`render.yaml`) and
-Fly.io (`fly.toml`). See [`docs/DEPLOY.md`](docs/DEPLOY.md).
+Prefer a long-running process — full WebSocket streaming and durable
+in-process state? The repo is deploy-ready for those too: a verified
+`Dockerfile`, `docker-compose.yml` (demo mode out of the box), and blueprints
+for Render (`render.yaml`) and Fly.io (`fly.toml`). See
+[`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 ```bash
 docker compose up --build   # → http://127.0.0.1:8000, seeded demo

@@ -80,4 +80,22 @@ export KC_DEMO_SEED="${KC_DEMO_SEED:-1}"
 say "Kingdom Come → http://127.0.0.1:$PORT"
 say "Mentor backend: $BACKEND"
 [ "$KC_DEMO_SEED" = "1" ] && say "Demo ledgers: seeded (KC_DEMO_SEED=0 to disable)"
+
+# 1-click activation: open the browser once the server actually answers, so a
+# first run needs zero follow-up steps. KC_NO_OPEN=1 (or CI) suppresses it.
+if [ -z "${KC_NO_OPEN:-}" ] && [ -z "${CI:-}" ]; then
+  say "Opening your browser… (KC_NO_OPEN=1 to skip)"
+  (
+    for _ in $(seq 1 80); do
+      if curl -sf --max-time 1 "http://127.0.0.1:$PORT/health" >/dev/null 2>&1; then
+        if command -v open >/dev/null 2>&1; then open "http://127.0.0.1:$PORT"
+        elif command -v xdg-open >/dev/null 2>&1; then xdg-open "http://127.0.0.1:$PORT"
+        fi
+        break
+      fi
+      sleep 0.25
+    done
+  ) >/dev/null 2>&1 &
+fi
+
 exec "$PY" -m uvicorn backend.app:app --host 127.0.0.1 --port "$PORT"

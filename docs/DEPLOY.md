@@ -86,11 +86,45 @@ Or from the dashboard — the repo ships a [`render.yaml`](../render.yaml) bluep
 4. Real mentor: set `OPENAI_API_KEY` in the dashboard and delete the
    `LLM_FAKE_RESPONSE` env var.
 
+## Vercel — the canonical demo host
+
+The reference demo instance runs here: **https://kingdom-come.vercel.app**
+(demo mode, scales to zero — the first request after idle pays a cold start).
+
+The repo ships [`vercel.json`](../vercel.json), [`api/index.py`](../api/index.py)
+(the ASGI entrypoint), and [`requirements.txt`](../requirements.txt) (Vercel
+installs from that file, not from `pyproject.toml` extras — a
+`tests/test_demo_entry.py` gate keeps the two in sync).
+
+```bash
+vercel link       # once, to bind this checkout to the project
+vercel --prod     # deploy
+```
+
+CI does this automatically on every push to `main`
+([`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml)), then runs a
+`KC_CHECK_LIVE=1` pass against the deployed URL. That verify step exists
+because a brand commit once shipped green and never reached production —
+merging is not shipping.
+
+### Two things serverless changes
+
+1. **No WebSockets.** `/ws/chat` never connects on Vercel. `frontend/chat.js`
+   detects the failed handshake and falls back to `POST /api/chat`
+   ([`backend/api/http_chat.py`](../backend/api/http_chat.py)) — the same
+   `handle_chat_ws` pipeline, returning `{"memory": [...], "reply": "...",
+   "done": true}` in one response. `tests/test_http_chat.py` asserts the two
+   transports produce identical text, so the demo can't drift from the product.
+2. **In-process state is per-instance.** `prayer._state`, the FAISS index, and
+   the fakeredis bus live in the function instance. `KC_DEMO_SEED=1` re-seeds
+   on every cold start so reads are always a full demo week; writes persist
+   only while that instance stays warm. For durable ledgers, use a
+   long-running host below with `KC_PERSIST=1`.
+
 ## Fly.io
 
-The reference demo instance runs here: **https://kingdom-come.fly.dev**
-(demo mode, `auto_stop_machines` — first request after idle takes a few
-seconds while a machine wakes).
+An alternative when you want a long-running process — real WebSocket streaming
+and in-process state that survives between requests.
 
 The repo ships a [`fly.toml`](../fly.toml):
 

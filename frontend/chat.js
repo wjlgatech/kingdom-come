@@ -83,6 +83,45 @@ function showError(text) {
   thread.scrollTop = thread.scrollHeight;
 }
 
+// Serverless hosts (the public Vercel demo) can't carry a WebSocket. Once we
+// learn that, stop retrying the socket and POST /api/chat instead — same
+// pipeline, whole reply at once. `wsUnavailable` latches so we only pay the
+// failed-handshake cost once per page.
+let wsUnavailable = false;
+
+// How long to let a socket finish its handshake before falling back to HTTP.
+// Where WS works this is never reached (localhost opens in ~1ms); where it
+// doesn't, it's the whole delay a visitor sees before the mentor answers.
+const WS_OPEN_DEADLINE_MS = 1500;
+
+async function sendOverHttp(text) {
+  setStatus("connecting", "thinking…");
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ student_id: studentId, message: text }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.error) {
+      showError("I'm not able to think clearly just now. Try again in a moment.");
+      setStatus("ready", "ready");
+      return;
+    }
+    if (data.memory !== undefined) renderMemoryPills(data.memory);
+    if (data.reply) {
+      if (!pendingMentorBubble) startMentorBubble();
+      appendMentorChunk(data.reply);
+    }
+    finalizeMentorBubble();
+    setStatus("ready", "ready");
+  } catch {
+    showError("I'm not able to think clearly just now. Try again in a moment.");
+    setStatus("ready", "ready");
+  }
+}
+
 function ensureSocket() {
   if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
     return socket;
@@ -92,7 +131,14 @@ function ensureSocket() {
   setStatus("connecting", "connecting…");
   socket.addEventListener("open", () => setStatus("connected", "connected"));
   socket.addEventListener("close", () => setStatus("reconnecting", "reconnecting…"));
-  socket.addEventListener("error", () => setStatus("error", "error"));
+  socket.addEventListener("error", () => {
+    // A handshake that never completes means this host has no WS support.
+    // Only latch the flag — never start work from here. This fires during
+    // page teardown too, and firing a request from a closing page leaves the
+    // server holding a job for a client that no longer exists.
+    wsUnavailable = true;
+    setStatus("error", "error");
+  });
   socket.addEventListener("message", (ev) => {
     let parsed;
     try { parsed = JSON.parse(ev.data); } catch { return; }
@@ -124,10 +170,30 @@ function sendMessage() {
   appendStudentBubble(text);
   messageInput.value = "";
   startMentorBubble();
+  if (wsUnavailable) { sendOverHttp(text); return; }
+
   const ws = ensureSocket();
   const payload = JSON.stringify({ student_id: studentId, message: text });
-  if (ws.readyState === WebSocket.OPEN) ws.send(payload);
-  else ws.addEventListener("open", () => ws.send(payload), { once: true });
+  if (ws.readyState === WebSocket.OPEN) { ws.send(payload); return; }
+
+  // Still handshaking. Race the open against a short deadline: whoever wins
+  // handles this message, exactly once. A `handled` latch (rather than an
+  // error listener that sends) means teardown can never start a request —
+  // this only ever runs for a message the user actually submitted.
+  let handled = false;
+  const useHttp = () => {
+    if (handled) return;
+    handled = true;
+    wsUnavailable = true;
+    sendOverHttp(text);
+  };
+  const timer = setTimeout(useHttp, WS_OPEN_DEADLINE_MS);
+  ws.addEventListener("open", () => {
+    if (handled) return;
+    handled = true;
+    clearTimeout(timer);
+    ws.send(payload);
+  }, { once: true });
 }
 
 form.addEventListener("submit", (e) => { e.preventDefault(); sendMessage(); });

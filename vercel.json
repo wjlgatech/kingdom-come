@@ -1,0 +1,18 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/index.py": {
+      "runtime": "python3.12",
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api/index" }
+  ],
+  "env": {
+    "KC_DEMO_SEED": "1",
+    "EMBEDDING_FAKE": "1",
+    "LLM_FAKE_RESPONSE": "Walk gently into this week. What you named is worth one more honest paragraph."
+  }
+}

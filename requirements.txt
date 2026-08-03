@@ -1,0 +1,15 @@
+# Vercel Python Function dependencies (api/index.py).
+#
+# Vercel installs from requirements.txt, not pyproject extras. This is the
+# runtime set only — no uvicorn (Vercel provides the server), no dev/test deps.
+# Keep in sync with [project.dependencies] + [standalone] in pyproject.toml;
+# tests/test_demo_entry.py asserts they don't drift.
+faiss-cpu>=1.7
+fakeredis>=2.20
+fastapi>=0.111
+jinja2>=3.1
+numpy>=1.26
+openai>=1.40
+pydantic>=2
+redis>=5
+sqlalchemy>=2
