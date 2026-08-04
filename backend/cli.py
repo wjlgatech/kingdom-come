@@ -19,9 +19,16 @@ import urllib.request
 
 # The public, remotely-visitable demo. Vercel is the standard host across the
 # whole portfolio, so Kingdom Come deploys there too (vercel.json + api/index.py).
-# tests/test_demo_entry.py pins this to the README's above-the-fold link.
+#
+# COPIED FROM `vercel --prod` OUTPUT — never composed from the project name.
+# `<project>.vercel.app` is a global namespace we don't own: "kingdom-come" was
+# already taken by an unrelated site, so Vercel aliased this project to
+# "-two". For two days the README's demo link sent visitors to a stranger's
+# app, and every test passed, because the tests checked the naming convention
+# instead of the deployment. The live gate in tests/test_demo_entry.py now
+# asserts this URL serves *our* app, not merely that it is well-formed.
 VERCEL_PROJECT = "kingdom-come"
-DEMO_URL = f"https://{VERCEL_PROJECT}.vercel.app"
+DEMO_URL = "https://kingdom-come-two.vercel.app"
 
 
 def _wait_and_open(url: str, timeout_s: float = 20.0) -> None:

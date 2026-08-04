@@ -29,10 +29,24 @@ BRAND_IVORY = "#faf9f5"
 BRAND_THEME_ATTR = 'data-theme="anthropic"'
 
 
-def test_vercel_is_wired_to_serve_the_whole_app():
-    """DEMO_URL can't point somewhere we don't actually deploy."""
-    assert DEMO_URL == f"https://{VERCEL_PROJECT}.vercel.app"
+def test_demo_url_is_not_guessed_from_the_project_name():
+    """`https://<project>.vercel.app` is a guess at a namespace we don't own.
 
+    This test used to assert exactly that composition and called it "DEMO_URL
+    can't point somewhere we don't actually deploy" — while the URL resolved to
+    an unrelated stranger's site. A convention check is not a deployment check.
+    DEMO_URL must be a literal copied from `vercel --prod`; only the live gate
+    below can prove it serves us.
+    """
+    assert DEMO_URL != f"https://{VERCEL_PROJECT}.vercel.app", (
+        "DEMO_URL looks derived from the project name. Copy the alias printed "
+        "by `vercel --prod` instead — Vercel renames on collision."
+    )
+    src = (ROOT / "backend" / "cli.py").read_text()
+    assert f'DEMO_URL = "{DEMO_URL}"' in src, "DEMO_URL must be a literal, not composed"
+
+
+def test_vercel_is_wired_to_serve_the_whole_app():
     cfg = json.loads((ROOT / "vercel.json").read_text())
     assert "api/index.py" in cfg["functions"], "vercel.json must build api/index.py"
     # Every path — Jinja pages, /api/*, /static/* — goes to the one function.
@@ -69,6 +83,20 @@ def test_vercel_requirements_cover_the_runtime_deps():
     # realtime.py imports fakeredis whenever REDIS_URL is unset — which is
     # always, on Vercel. Shipping without it is a cold-start ImportError.
     assert "fakeredis" in shipped, "Vercel has no Redis; fakeredis must ship"
+
+    # This comparison only catches deps that *are* declared. python-multipart
+    # was declared nowhere and arrived transitively, so both files agreed and
+    # the whole app 500'd on Vercel with a route-definition-time ImportError.
+    # FastAPI raises on import for Form/File routes, not on first request.
+    uses_forms = any(
+        ("UploadFile" in p.read_text() or "Form(" in p.read_text())
+        for p in (ROOT / "backend").rglob("*.py")
+    )
+    if uses_forms:
+        assert "python-multipart" in shipped, (
+            "a route uses Form/UploadFile, so python-multipart is a hard runtime "
+            "dep — FastAPI raises at import time without it"
+        )
 
 
 def test_readme_links_the_live_demo_above_the_fold():
@@ -160,6 +188,18 @@ def test_live_deploy_serves_the_brand_this_repo_ships():
                 return r.status, r.read().decode("utf-8", "replace")
         except urllib.error.HTTPError as e:
             return e.code, ""
+
+    # IDENTITY FIRST. Brand markers only prove *a* site is on-brand; they
+    # cannot tell our app from someone else's. `/api/students` is ours and
+    # nobody else's — if this 404s, DEMO_URL is pointing at a stranger.
+    status, roster = get("/api/students")
+    assert status == 200, (
+        f"{DEMO_URL}/api/students returned {status} — DEMO_URL is not serving "
+        "this app. Check the alias printed by `vercel --prod`."
+    )
+    assert "stu-marcus-r" in roster, (
+        f"{DEMO_URL} answered /api/students but with a roster we don't recognise"
+    )
 
     status, _ = get("/static/anthropic-theme.css")
     assert status == 200, (

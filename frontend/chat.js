@@ -95,7 +95,7 @@ let wsUnavailable = false;
 const WS_OPEN_DEADLINE_MS = 1500;
 
 async function sendOverHttp(text) {
-  setStatus("connecting", "thinking…");
+  setStatus("connecting", "Thinking…");
   try {
     const res = await fetch("/api/chat", {
       method: "POST",
@@ -106,7 +106,7 @@ async function sendOverHttp(text) {
     const data = await res.json();
     if (data.error) {
       showError("I'm not able to think clearly just now. Try again in a moment.");
-      setStatus("ready", "ready");
+      setStatus("ready", "Mentor is here");
       return;
     }
     if (data.memory !== undefined) renderMemoryPills(data.memory);
@@ -115,10 +115,10 @@ async function sendOverHttp(text) {
       appendMentorChunk(data.reply);
     }
     finalizeMentorBubble();
-    setStatus("ready", "ready");
+    setStatus("ready", "Mentor is here");
   } catch {
     showError("I'm not able to think clearly just now. Try again in a moment.");
-    setStatus("ready", "ready");
+    setStatus("ready", "Mentor is here");
   }
 }
 
@@ -128,23 +128,23 @@ function ensureSocket() {
   }
   const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
   socket = new WebSocket(`${proto}//${window.location.host}/ws/chat`);
-  setStatus("connecting", "connecting…");
-  socket.addEventListener("open", () => setStatus("connected", "connected"));
-  socket.addEventListener("close", () => setStatus("reconnecting", "reconnecting…"));
+  setStatus("connecting", "Finding your mentor…");
+  socket.addEventListener("open", () => setStatus("connected", "Mentor is here"));
+  socket.addEventListener("close", () => setStatus("reconnecting", "Finding the mentor again…"));
   socket.addEventListener("error", () => {
     // A handshake that never completes means this host has no WS support.
     // Only latch the flag — never start work from here. This fires during
     // page teardown too, and firing a request from a closing page leaves the
     // server holding a job for a client that no longer exists.
     wsUnavailable = true;
-    setStatus("error", "error");
+    setStatus("error", "Mentor is offline");
   });
   socket.addEventListener("message", (ev) => {
     let parsed;
     try { parsed = JSON.parse(ev.data); } catch { return; }
     if (parsed.error) {
       showError("I'm not able to think clearly just now. Try again in a moment.");
-      setStatus("ready", "ready");
+      setStatus("ready", "Mentor is here");
       return;
     }
     if (parsed.memory !== undefined) {
@@ -158,7 +158,7 @@ function ensureSocket() {
     }
     if (parsed.done) {
       finalizeMentorBubble();
-      setStatus("ready", "ready");
+      setStatus("ready", "Mentor is here");
     }
   });
   return socket;

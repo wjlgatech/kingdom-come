@@ -95,7 +95,8 @@ function renderChart(points) {
     const lbl = document.createElementNS(ns, "text");
     lbl.setAttribute("x", 4); lbl.setAttribute("y", y + 4);
     lbl.setAttribute("class", "axis-label");
-    lbl.textContent = g.toFixed(2);
+    // A bare "0.75" makes a reader ask "0.75 of what?". Percent needs no key.
+    lbl.textContent = `${Math.round(g * 100)}%`;
     svg.appendChild(lbl);
   });
 

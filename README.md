@@ -4,7 +4,7 @@
 
 Kingdom Come is an open-source FastAPI platform for seminaries, church networks, and ministry training teams that want to move from scattered spreadsheets to real formation signals. It combines dropout risk detection, adaptive curriculum recommendations, live class orchestration, and ministry outcome tracking in one contributor-friendly project.
 
-**[Try the live demo →](https://kingdom-come.vercel.app)** (seeded demo week, scripted mentor — nothing to install)
+**[Try the live demo →](https://kingdom-come-two.vercel.app)** (seeded demo week, scripted mentor — nothing to install)
 
 [Explore the repo](https://github.com/wjlgatech/kingdom-come) · [Run locally](#quickstart) · [Contribute](#contribute)
 
@@ -52,7 +52,7 @@ The OpenAPI docs are available at `http://127.0.0.1:8000/docs`.
 
 ## Quickstart
 
-Nothing to install — the [live demo](https://kingdom-come.vercel.app) is the fastest path.
+Nothing to install — the [live demo](https://kingdom-come-two.vercel.app) is the fastest path.
 
 To run it yourself, one command installs on first run, picks a free LLM backend
 automatically (NVIDIA NIM key if found → local Ollama → scripted fallback),
@@ -130,7 +130,7 @@ Set `KC_DEMO_SEED=1` to start with a lived-in demo week.
 
 ## Deploy it
 
-The canonical hosted demo runs at **https://kingdom-come.vercel.app** (Vercel,
+The canonical hosted demo runs at **https://kingdom-come-two.vercel.app** (Vercel,
 demo mode, scales to zero when idle). It serves the real FastAPI app from
 `api/index.py` — same pages, same JSON API. Two deliberate differences from a
 local run, because Vercel Functions are serverless:

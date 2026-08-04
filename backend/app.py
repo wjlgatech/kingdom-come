@@ -60,7 +60,7 @@ SEMINARIAN_SUBNAV = [
     {"href": "/me", "label": "Today", "key": "today"},
     {"href": "/me/chat", "label": "Mentor", "key": "mentor"},
     {"href": "/me/prayer", "label": "Prayer", "key": "prayer"},
-    {"href": "/me/timeline", "label": "Arc", "key": "arc"},
+    {"href": "/me/timeline", "label": "My story", "key": "arc"},
     {"href": "/me/year", "label": "Year", "key": "year"},
 ]
 DIRECTOR_SUBNAV = [

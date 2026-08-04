@@ -122,7 +122,7 @@ def test_subnav_active_state_set_per_route():
     assert "aria-current=\"page\">Today" in me_resp
     assert "aria-current=\"page\">Mentor" in chat_resp
     assert "aria-current=\"page\">Prayer" in prayer_resp
-    assert "aria-current=\"page\">Arc" in arc_resp
+    assert "aria-current=\"page\">My story" in arc_resp
     assert "aria-current=\"page\">Cohort" in cohort_resp
     assert "aria-current=\"page\">Triage" in triage_resp
     assert "aria-current=\"page\">Groups" in groups_resp
@@ -130,7 +130,7 @@ def test_subnav_active_state_set_per_route():
 
 def test_seminarian_subnav_includes_arc_after_p2():
     response = client.get("/me").text
-    assert ">Today<" in response and ">Mentor<" in response and ">Arc<" in response
+    assert ">Today<" in response and ">Mentor<" in response and ">My story<" in response
     assert ">Prayer<" in response
 
 

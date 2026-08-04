@@ -149,7 +149,9 @@ def test_e2e_me_renders_status_and_path(live_app):
                 "() => document.querySelector('[data-testid=\"me-status-pill\"]') !== null"
             )
             status_text = page.get_by_test_id("me-status-pill").inner_text().strip()
-            assert status_text in {"Thriving", "Steady", "Needs check-in", "At risk"}
+            # A student's own page uses the invitation vocabulary, not the triage
+            # labels the director sees (status.js: statusLabelSelf).
+            assert status_text in {"In rhythm", "Steady", "Worth a talk", "Let's talk"}
 
             page.wait_for_function(
                 "() => /mission|theology|holding|formation/i.test(document.querySelector('[data-testid=\"me-path-line\"]')?.innerText ?? '')"
@@ -327,9 +329,9 @@ def test_e2e_timeline_renders_weekly_arc(live_app):
             page.wait_for_function(
                 "() => document.querySelector('[data-testid=\"timeline-reflection\"]') !== null"
             )
-            # Subnav has Arc active.
+            # Subnav has the story tab active.
             arc_active = page.locator("a[aria-current='page']").first.inner_text().strip()
-            assert arc_active == "Arc"
+            assert arc_active == "My story"
             browser.close()
     except Error as exc:
         pytest.fail(f"Playwright timeline flow failed: {exc}")

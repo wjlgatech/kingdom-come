@@ -29,6 +29,20 @@ export function statusClass(status) {
   return `status-${status}`;
 }
 
+// A person reading their own page is not a case to be triaged. "At risk" is
+// the director's word for a row in a list; said to someone's face it is a
+// verdict. Same underlying score, same colour, honest either way — but the
+// student's version ends in an invitation rather than a label.
+export function statusLabelSelf(status) {
+  switch (status) {
+    case STATUS.THRIVING: return "In rhythm";
+    case STATUS.STEADY: return "Steady";
+    case STATUS.CHECK_IN: return "Worth a talk";
+    case STATUS.AT_RISK: return "Let's talk";
+    default: return "Unknown";
+  }
+}
+
 const REASON_TRANSLATIONS = {
   low_engagement: () => "Engagement has dropped this week.",
   few_reflections: ({ days = 9 } = {}) => `Hasn't reflected in ${days} days.`,
@@ -38,14 +52,30 @@ const REASON_TRANSLATIONS = {
   frequent_reflections: () => "Reflecting most days this week.",
 };
 
+// Second person, for the page a student reads about themselves. Not a regex
+// rewrite of the sentences above — a separate table, because "Hasn't reflected
+// in 9 days" and "It's been 9 days since you last wrote" are different
+// sentences, not the same sentence conjugated.
+const REASON_TRANSLATIONS_SELF = {
+  low_engagement: () => "You've been quieter here this week.",
+  few_reflections: ({ days = 9 } = {}) => `It's been ${days} days since you last wrote anything down.`,
+  calling_drift: () => "What you're writing now points somewhere different from where you started.",
+  missed_outcomes: ({ since = "three weeks" } = {}) => `Nothing from ministry has gone in the log for ${since}.`,
+  high_engagement: () => "You've shown up steadily this week.",
+  frequent_reflections: () => "You've written most days this week.",
+};
+
+function translate(table, reasons, ctx, fallback) {
+  if (!reasons || reasons.length === 0) return fallback;
+  return reasons.map((code) => (table[code] ? table[code](ctx) : code)).join(" ");
+}
+
 export function reasonsToSentence(reasons, ctx = {}) {
-  if (!reasons || reasons.length === 0) return "Holding pattern this week.";
-  return reasons
-    .map((code) => {
-      const translator = REASON_TRANSLATIONS[code];
-      return translator ? translator(ctx) : code;
-    })
-    .join(" ");
+  return translate(REASON_TRANSLATIONS, reasons, ctx, "Holding pattern this week.");
+}
+
+export function reasonsToSelfSentence(reasons, ctx = {}) {
+  return translate(REASON_TRANSLATIONS_SELF, reasons, ctx, "A quiet week, nothing out of place.");
 }
 
 const AVATAR_PALETTE_LIGHTNESS = 88;

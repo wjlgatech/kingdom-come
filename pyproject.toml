@@ -10,6 +10,10 @@ dependencies = [
     "numpy>=1.26",
     "openai>=1.40",
     "pydantic>=2",
+    # Form/UploadFile routes (roster CSV import) import this at route-definition
+    # time — FastAPI raises on import, not on request. It used to arrive only as
+    # a transitive dep, which held locally and 500'd the whole app on Vercel.
+    "python-multipart>=0.0.9",
     "redis>=5",
     "sqlalchemy>=2",
     "uvicorn[standard]>=0.30",

@@ -1,5 +1,5 @@
 import { findStudent } from "/static/cohort_data.js";
-import { STATUS, statusFromRisk, statusLabel, statusClass, reasonsToSentence } from "/static/status.js";
+import { STATUS, statusFromRisk, statusLabelSelf, statusClass, reasonsToSelfSentence } from "/static/status.js";
 import { mountTour } from "/static/tour.js";
 
 mountTour("me", [
@@ -36,16 +36,16 @@ function renderStatusLine(student, riskJson) {
   const status = statusFromRisk({ score: riskJson.score });
   const ctx = student.reason_overrides?.[riskJson.reasons?.[0]] ?? {};
   const reasonText = (() => {
-    if (riskJson.reasons && riskJson.reasons.length > 0) return reasonsToSentence(riskJson.reasons, ctx);
-    if (status === STATUS.THRIVING) return "Reflecting consistently this week.";
-    return "Holding pattern this week.";
+    if (riskJson.reasons && riskJson.reasons.length > 0) return reasonsToSelfSentence(riskJson.reasons, ctx);
+    if (status === STATUS.THRIVING) return "You've written consistently this week.";
+    return "A quiet week, nothing out of place.";
   })();
   const line = document.querySelector("[data-testid='me-status-line']");
   if (!line) return;
   line.innerHTML = "";
   const pill = document.createElement("span");
   pill.className = `status-pill ${statusClass(status)}`;
-  pill.textContent = statusLabel(status);
+  pill.textContent = statusLabelSelf(status);
   pill.dataset.testid = "me-status-pill";
   line.appendChild(pill);
   line.appendChild(document.createTextNode(" "));

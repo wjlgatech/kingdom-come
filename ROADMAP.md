@@ -8,7 +8,7 @@
 - MCP server exposing the formation engines and the AI mentor for Claude Code, Codex, Hermes, OpenCode, and any MCP-aware agent harness — plus journey skills (`skills/`) for webapp-parity agent UX.
 - Prayer + prophecy ledgers with longitudinal track records (answer rate, confirmation rate, fulfillment rate), the 1 Cor 14:29 2-of-3 weighing rule, a seminarian surface at `/me/prayer`, and a counts-only director rhythm on `/cohort` with the tradition policy toggle.
 - Deploy-ready packaging: verified Dockerfile, compose, Render + Fly blueprints (`docs/DEPLOY.md`), demo seed via `KC_DEMO_SEED=1`.
-- Hosted demo instance at https://kingdom-come.vercel.app (Vercel, demo mode; mentor chat falls back to HTTP since serverless has no WebSockets).
+- Hosted demo instance at https://kingdom-come-two.vercel.app (Vercel, demo mode; mentor chat falls back to HTTP since serverless has no WebSockets).
 - Browser E2E coverage for every primary surface and both persona journeys, plus an axe-core accessibility gate over all ten surfaces.
 - Opt-in prayer/prophecy ledger persistence (`KC_PERSIST=1` — write-through rows, replayed at startup).
 - The Formation Year (`/me/year`), the shared 40-day journey, the director's counts-only pulse note, user-controlled mentor memory, first-run tours, live door previews.

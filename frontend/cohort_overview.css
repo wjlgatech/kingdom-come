@@ -1,4 +1,7 @@
-.cohort-main { padding-top: var(--space-32); }
+/* Every section inside already caps at --reading-width, so on a wide screen
+   the page rendered as a narrow left-hugging column against a dead right
+   half. Cap the main itself and the whole page centres like /me does. */
+.cohort-main { padding-top: var(--space-32); max-width: var(--reading-width); }
 
 .cohort-header { margin-bottom: var(--space-48); max-width: var(--reading-width); }
 .cohort-headline {
@@ -150,6 +153,10 @@
   gap: var(--space-16);
   flex-wrap: wrap;
 }
+/* The headline is long enough to take the whole row, so the import control
+   wraps beneath it — where, left-aligned, it read as a stray caption above
+   the summary sentence. Keep it on the right edge wherever it lands. */
+.cohort-header-row .btn { margin-left: auto; }
 
 /* Pulse note (C5): quoted pastoral voice, distinct from the stats sentence. */
 .cohort-pulse-note {

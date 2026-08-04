@@ -88,7 +88,7 @@ Or from the dashboard — the repo ships a [`render.yaml`](../render.yaml) bluep
 
 ## Vercel — the canonical demo host
 
-The reference demo instance runs here: **https://kingdom-come.vercel.app**
+The reference demo instance runs here: **https://kingdom-come-two.vercel.app**
 (demo mode, scales to zero — the first request after idle pays a cold start).
 
 The repo ships [`vercel.json`](../vercel.json), [`api/index.py`](../api/index.py)
@@ -98,8 +98,23 @@ installs from that file, not from `pyproject.toml` extras — a
 
 ```bash
 vercel link       # once, to bind this checkout to the project
-vercel --prod     # deploy
+vercel --prod     # deploy — READ THE URL IT PRINTS
 ```
+
+### Never compose the demo URL from the project name
+
+`https://<project>.vercel.app` is a **global** namespace, not a per-account one.
+`kingdom-come.vercel.app` was already taken by an unrelated site, so Vercel
+aliased this project to `kingdom-come-two.vercel.app`. For two days the README's
+above-the-fold demo link sent every visitor to a stranger's app while the whole
+suite stayed green — because the test asserted the naming convention rather than
+the deployment.
+
+So: `DEMO_URL` in `backend/cli.py` is a **literal copied from the `vercel --prod`
+output**, and `tests/test_demo_entry.py` now (a) fails if `DEMO_URL` looks
+derived from the project name and (b) checks `/api/students` for a roster we
+recognise *before* checking any brand marker — brand markers prove a site is
+on-brand, not that it is ours.
 
 CI does this automatically on every push to `main`
 ([`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml)), then runs a
