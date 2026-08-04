@@ -30,5 +30,38 @@
         "evidence": "commit 1c5869f on origin/main"
       }
     ]
+  },
+  {
+    "id": "rc0002",
+    "delivery": "Fixed the public demo (wrong URL, undeclared dep, invalid runtime, path-mangling rewrite) and rewrote the UI's user-facing language against the four principles",
+    "objective": "The public demo is our app, and says what it does in words a 15-year-old understands",
+    "created_at": "2026-08-04T16:12:41-05:00",
+    "key_results": [
+      {
+        "text": "Demo URL serves this app, not a stranger's",
+        "target": "identity-asserting live gate",
+        "score": 0.5,
+        "evidence": "DEMO_URL is now a literal from vercel --prod plus an /api/students identity check; deploy blocked by a 100/day account-wide cap until ~2026-08-05"
+      },
+      {
+        "text": "Every live-failure mode has a gate",
+        "target": "4 of 4 covered",
+        "score": 1.0,
+        "evidence": "stale, wrong-site, import-crash, path-mangling rewrite each have a test in tests/test_demo_entry.py"
+      },
+      {
+        "text": "UI speaks plainly on every surface",
+        "target": "no internal vocabulary user-facing",
+        "score": 1.0,
+        "evidence": "door headline, second-person self-voice, statusLabelSelf, Arc to My story, socket states to Mentor is here, percent axis; 237 passed, browser-verified, zero console errors"
+      }
+    ],
+    "request": "the kingdom-come vercel agentic webapp is against our webapp playbook. blackback ground, sophisticate UI, placehold-empty promise, all wrong and unacceptable. Our foundational principle: simplicity, solid, Sharp, Clarity. Anyagent, remember this lession",
+    "headline": "The demo link pointed at a stranger's app",
+    "brief": "Paul opened the demo link and found a black gothic clicker game. It was not our app at all: the URL had been composed as https://<project>.vercel.app, a name someone else already owns. Fixed the link to the real alias, then fixed three more ways the deploy was broken, then went through our own UI and replaced the jargon with plain speech.",
+    "growth": [
+      "C1:met:reported that the bug premise was wrong (a stranger's site) instead of redesigning what Paul described",
+      "P1:missed:authored vercel.json, requirements.txt and a DEMO_URL gate without ever running a real deploy; three of four failures were config I wrote and never executed"
+    ]
   }
 ]
