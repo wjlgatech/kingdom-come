@@ -92,9 +92,20 @@ The reference demo instance runs here: **https://kingdom-come-two.vercel.app**
 (demo mode, scales to zero — the first request after idle pays a cold start).
 
 The repo ships [`vercel.json`](../vercel.json), [`api/index.py`](../api/index.py)
-(the ASGI entrypoint), and [`requirements.txt`](../requirements.txt) (Vercel
-installs from that file, not from `pyproject.toml` extras — a
-`tests/test_demo_entry.py` gate keeps the two in sync).
+(the ASGI entrypoint), and [`requirements.txt`](../requirements.txt).
+
+Vercel auto-detects the **FastAPI preset**, which mounts `api/index.py`'s `app`
+and routes every path to it. Two consequences worth knowing:
+
+- It installs from **`pyproject.toml`** ("Installing required dependencies from
+  pyproject.toml" in the build log), not `requirements.txt`. A
+  `tests/test_demo_entry.py` gate keeps the two in sync so neither can be the
+  stale one.
+- **Do not add a catch-all rewrite.** Under a backend framework preset, an
+  internal rewrite changes the path the ASGI app *receives* — Vercel warns
+  about this in the build log. `{"source": "/(.*)", "destination":
+  "/api/index"}` made every request arrive as `/api/index`, so a healthy,
+  Ready deployment answered `{"detail":"Not Found"}` on every URL of the site.
 
 ```bash
 vercel link       # once, to bind this checkout to the project

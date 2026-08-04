@@ -65,10 +65,14 @@ def test_vercel_is_wired_to_serve_the_whole_app():
 
 
 def test_vercel_requirements_cover_the_runtime_deps():
-    """Vercel reads requirements.txt, not pyproject — they must not drift.
+    """requirements.txt and pyproject must not drift.
 
-    A dep added to pyproject but missed here fails at cold start in production,
-    long after every local test went green.
+    Note which one Vercel actually reads: the build log says "Installing
+    required dependencies from pyproject.toml", so under the FastAPI preset
+    *pyproject* is the source of truth and requirements.txt is the fallback for
+    a plain-Python-Function setup. Keeping them in sync means neither path can
+    be the one that's wrong — but a dep declared in neither (see
+    python-multipart below) is invisible to this test by construction.
     """
     reqs = (ROOT / "requirements.txt").read_text()
     shipped = {
