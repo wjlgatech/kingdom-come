@@ -47,11 +47,18 @@ def test_demo_url_is_not_guessed_from_the_project_name():
 
 
 def test_vercel_is_wired_to_serve_the_whole_app():
+    """Vercel's FastAPI preset mounts api/index.py's `app` and routes every
+    path to it. No rewrite is needed — and a catch-all rewrite is actively
+    harmful here: `{"source": "/(.*)", "destination": "/api/index"}` rewrites
+    the path the ASGI app *receives*, so every request arrived as
+    "/api/index" and FastAPI answered {"detail":"Not Found"} for the whole
+    site while the deployment reported Ready.
+    """
     cfg = json.loads((ROOT / "vercel.json").read_text())
-    assert "api/index.py" in cfg["functions"], "vercel.json must build api/index.py"
-    # Every path — Jinja pages, /api/*, /static/* — goes to the one function.
-    assert any(r["destination"] == "/api/index" and r["source"] == "/(.*)"
-               for r in cfg["rewrites"]), "vercel.json must route all paths to the app"
+    assert "rewrites" not in cfg, (
+        "a catch-all rewrite mangles the path the FastAPI app sees — the "
+        "preset already routes every path to api/index.py"
+    )
 
     entry = (ROOT / "api" / "index.py").read_text()
     assert "from backend.app import app" in entry, "the function must serve the real app"
